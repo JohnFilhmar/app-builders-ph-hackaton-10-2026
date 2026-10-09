@@ -65,6 +65,18 @@ describe('deriveState', () => {
     expect(s.achievements).toContain('pabuya_natanggap');
   });
 
+  it('charges for shop items once and refunds retired ones', () => {
+    const events: GameEvent[] = [profile];
+    events.push(completeQuest(events, { quest_id: 'r', quest_type: 'linis', minutes: 60, tier: 'patunay', disputed: false }, NOW));
+    const before = deriveState(events, NOW + 1).pabuyaBalance;
+    events.push({ id: 'b1', type: 'item_bought', at: NOW + 2, payload: { item_id: 'frame_kawayan', price: 120 } });
+    events.push({ id: 'b2', type: 'item_bought', at: NOW + 3, payload: { item_id: 'frame_kawayan', price: 120 } });
+    events.push({ id: 'b3', type: 'item_bought', at: NOW + 4, payload: { item_id: 'fit_barong', price: 350 } });
+    const s = deriveState(events, NOW + 5);
+    expect(s.pabuyaBalance).toBe(before - 120);
+    expect(s.ownedItems).toEqual(['frame_kawayan']);
+  });
+
   it('awards Perpekto only for a perfect quiz', () => {
     const events: GameEvent[] = [profile];
     events.push(completeQuest(events, { quest_id: 'x', quest_type: 'aral', minutes: 30, tier: 'patunay', disputed: false, evidence: { quiz_correct: 4, quiz_total: 5 } }, NOW));

@@ -3,6 +3,7 @@ import { addDays, dayKey, daysBetween } from '@/lib/game/days';
 import { levelForXp, type LevelInfo } from '@/lib/game/levels';
 import { walkStreak, type StreakInfo } from '@/lib/game/streak';
 import { emptyTally, type DayTally } from '@/lib/game/xp';
+import { SOLD_ITEM_IDS } from '@/lib/store/items';
 import type { AchievementId, BaseAvatar, GameEvent, QuestType } from '@/types/gameEvents';
 
 export type PabuyaItem = { id: string; title: string; price: number; claimed: boolean };
@@ -106,7 +107,8 @@ export function deriveState(events: GameEvent[], now: number): GameState {
         if (open.delete(e.payload.quest_id)) addXp(dayKey(e.at), -e.payload.penalty);
         break;
       case 'item_bought':
-        if (!owned.has(e.payload.item_id)) {
+        // ponytail: retired items (the 3D-era companions and outfits) are refunded by skipping them; add an item_refunded event if refunds ever need a timestamp
+        if (!owned.has(e.payload.item_id) && SOLD_ITEM_IDS.has(e.payload.item_id)) {
           owned.add(e.payload.item_id);
           spent += e.payload.price;
         }

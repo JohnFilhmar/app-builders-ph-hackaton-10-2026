@@ -9,9 +9,9 @@ import { SHOP_ITEMS, type ShopItem } from '@/lib/store/items';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { PALETTE } from '@/lib/theme/palette';
 
-const KIND_LABEL = { companion: ['Companion', 'Kasama'], aura: ['Aura', 'Aura'], outfit: ['Outfit', 'Damit'] } as const;
+const KIND_LABEL = { backdrop: ['Backdrop', 'Tanawin'], frame: ['Frame', 'Kuwadro'], aura: ['Aura', 'Aura'] } as const;
 
-/** The item shop: companions, auras and outfits bought with Sipag. Spending never lowers your level. */
+/** The item shop: backdrops, frames and auras bought with Sipag. Spending never lowers your level. */
 export function ItemShop() {
   const t = useT();
   const balance = useGameStore((s) => s.state.pabuyaBalance);
