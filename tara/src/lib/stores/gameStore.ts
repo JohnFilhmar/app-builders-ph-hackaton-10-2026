@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { deriveState, type GameState } from '@/lib/game/deriveState';
+import { useHeroStore } from '@/lib/hero/heroReactions';
 import type { GameEvent } from '@/types/gameEvents';
 
 type GameStore = {
@@ -25,8 +26,13 @@ export const useGameStore = create<GameStore>()(
       state: deriveState([], Date.now()),
       seenLevel: 1,
       append: (event) => {
+        const before = get().state;
         const events = [...get().events, event];
-        set({ events, state: deriveState(events, Date.now()) });
+        const state = deriveState(events, Date.now());
+        set({ events, state });
+        // the hero celebrates only what the ledger really changed; level ups get their own overlay
+        if (state.achievements.length > before.achievements.length) useHeroStore.getState().play('achievement');
+        else if (state.streak.current > before.streak.current) useHeroStore.getState().play('happy');
       },
       replaceAll: (events) => set({ events, state: deriveState(events, Date.now()), seenLevel: deriveState(events, Date.now()).level.level }),
       refresh: () => set({ state: deriveState(get().events, Date.now()) }),

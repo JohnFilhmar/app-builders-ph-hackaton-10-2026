@@ -40,7 +40,7 @@ export function LevelUpOverlay() {
             <Text className="font-pixel-bold text-2xl text-banig-50">Lv. {level.level}</Text>
             <Text className="font-pixel text-lg text-sipag-300">{level.name}</Text>
           </Animated.View>
-          <AvatarStage className="flex-1" fx="level_up_fx" celebrate />
+          <AvatarStage className="flex-1" fx="level_up_fx" celebrate evolveFrom={seenLevel} />
           <View className="gap-2.5">
             {unlocksFor(level.level, t).map((u) => (
               <View key={u} className="flex-row items-center gap-2.5">

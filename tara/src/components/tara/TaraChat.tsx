@@ -9,6 +9,7 @@ import { ChatDrafts } from '@/components/tara/ChatDrafts';
 import { TaraFace } from '@/components/tara/TaraFace';
 import { startLiveTranscription, type LiveTranscription } from '@/lib/audio/liveTranscriber';
 import { askTara, planQuests, type PlannedDraft } from '@/lib/chat/planQuests';
+import { useHeroStore } from '@/lib/hero/heroReactions';
 import { useT } from '@/lib/i18n/translate';
 import { declareQuest } from '@/lib/quests/declareQuest';
 import { QUEST_ICON, questName } from '@/lib/quests/questLook';
@@ -44,6 +45,8 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isBusy, setIsBusy] = useState(false);
+  const heroPlay = useHeroStore((s) => s.play);
+  const heroStopThinking = useHeroStore((s) => s.stopThinking);
   const [isVoice, setIsVoice] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const listening = useRef<LiveTranscription | null>(null);
@@ -91,6 +94,7 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
     setInput('');
     push({ from: 'user', text: message });
     setIsBusy(true);
+    heroPlay('thinking');
     try {
       if (mode === 'ask') {
         const history = [...messages.filter((m) => m.mode === 'ask' && m.text), { from: 'user' as const, text: message }].map((m) => ({
@@ -102,7 +106,9 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
         try {
           const reply = await askTara(history, (soFar) => update(id, { text: soFar }));
           update(id, { text: reply });
+          heroPlay('happy');
         } catch (err) {
+          heroPlay('error');
           update(id, { text: t(`Sorry, I got stuck (${errorMessage(err)}). Try again?`, `Pasensya, natigil ako (${errorMessage(err)}). Subukan ulit?`) });
         }
         return;
@@ -129,13 +135,16 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
         day: when.day,
         status: 'pending',
       });
+      if (drafts.length) heroPlay('happy');
     } catch (err) {
+      heroPlay('error');
       push({
         from: 'tara',
         text: t(`Sorry, I got stuck (${errorMessage(err)}). Try again?`, `Pasensya, natigil ako (${errorMessage(err)}). Subukan ulit?`),
       });
     } finally {
       setIsBusy(false);
+      heroStopThinking();
     }
   };
 
