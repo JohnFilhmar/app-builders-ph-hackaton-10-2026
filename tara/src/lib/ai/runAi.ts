@@ -4,6 +4,7 @@ import { activeModel } from '@/lib/ai/activeModel';
 import { useAiStore } from '@/lib/ai/aiSources';
 import { remoteChat, remoteTranscribe } from '@/lib/ai/remoteChat';
 import { runLlamaChat } from '@/lib/runtimes/llamaRuntime';
+import { useThoughtStore } from '@/lib/stores/thoughtStore';
 import { transcribeWav } from '@/lib/runtimes/whisperRuntime';
 import type { ChatMessage, Lang } from '@/types/chat';
 import { errorMessage } from '@/utils/errorMessage';
@@ -13,9 +14,10 @@ type AiOptions = { maxTokens?: number; temperature?: number; responseFormat?: Co
 /**
  * Runs a text or vision job on the source chosen in AI settings: the phone, an Ollama laptop, or OpenRouter. A remote
  * failure (no Wi-Fi, laptop asleep, bad key) falls back to the on-device model, so a quest check never dead-ends.
+ * A laptop reasoning model allowed to think streams its reasoning into the thought store, which the waiting screens show.
  * @param capability "brain" for text, "eyes" for photos
  * @param messages the conversation
- * @param onToken receives the reply so far (remote replies arrive in one piece)
+ * @param onToken receives the reply so far (remote replies arrive in one piece unless the model may think)
  * @param imagePath optional photo for vision jobs
  * @param options token budget, temperature and JSON schema
  */
@@ -27,13 +29,18 @@ export async function runAi(
   options: AiOptions = {},
 ): Promise<{ text: string }> {
   const source = useAiStore.getState().sources[capability];
+  // a new job starts with no thoughts, so an answer never shows the reasoning of an older one
+  useThoughtStore.setState({ text: '', last: '' });
   if (source.kind !== 'device') {
+    const thought = useThoughtStore.getState();
     try {
-      const text = await remoteChat(source, messages, { ...options, imagePath });
+      const text = await remoteChat(source, messages, { ...options, imagePath, onThinking: thought.set, onToken });
       onToken(text);
       return { text };
     } catch (err) {
       console.warn(`[ai] ${capability} on ${source.kind} failed, using the phone: ${errorMessage(err)}`);
+    } finally {
+      thought.clear();
     }
   }
   return runLlamaChat(activeModel(capability), messages, onToken, imagePath, options);

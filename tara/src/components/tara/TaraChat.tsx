@@ -7,6 +7,7 @@ import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { ChatDrafts } from '@/components/tara/ChatDrafts';
 import { TaraFace } from '@/components/tara/TaraFace';
+import { TaraThoughts } from '@/components/tara/TaraThoughts';
 import { startLiveTranscription, type LiveTranscription } from '@/lib/audio/liveTranscriber';
 import { askTara, planQuests, type PlannedDraft } from '@/lib/chat/planQuests';
 import { useHeroStore } from '@/lib/hero/heroReactions';
@@ -15,6 +16,7 @@ import { declareQuest } from '@/lib/quests/declareQuest';
 import { QUEST_ICON, questName } from '@/lib/quests/questLook';
 import { atTime, formatWhen, parseWhen, type When } from '@/lib/quests/schedule';
 import { useGameStore } from '@/lib/stores/gameStore';
+import { useThoughtStore } from '@/lib/stores/thoughtStore';
 import { PALETTE } from '@/lib/theme/palette';
 import { errorMessage } from '@/utils/errorMessage';
 
@@ -28,6 +30,8 @@ type Msg = {
   status?: 'pending' | 'added' | 'dropped';
   /** which mode the message belongs to; only Ask messages form the open-chat history */
   mode: Mode;
+  /** a thinking model's reasoning behind this answer, shown collapsed */
+  thought?: string;
 };
 
 let nextId = 1;
@@ -105,7 +109,7 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
         setMessages((all) => [...all, { id, mode: 'ask', from: 'tara', text: '' }]);
         try {
           const reply = await askTara(history, (soFar) => update(id, { text: soFar }));
-          update(id, { text: reply });
+          update(id, { text: reply, thought: useThoughtStore.getState().last || undefined });
           heroPlay('happy');
         } catch (err) {
           heroPlay('error');
@@ -208,6 +212,11 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
                 <PolyFrame cut={8} fill={m.from === 'user' ? PALETTE.ink900 : PALETTE.banig100}>
                   <Text className={`max-w-72 px-3 py-2 text-base ${m.from === 'user' ? 'text-banig-50' : 'text-ink-900'}`}>{m.text || '...'}</Text>
                 </PolyFrame>
+                {m.thought ? (
+                  <View className="mt-1 max-w-72">
+                    <TaraThoughts text={m.thought} />
+                  </View>
+                ) : null}
                 {m.drafts && (m.status === 'pending' || m.status === 'added') ? (
                   <ChatDrafts drafts={m.drafts} status={m.status} onRemove={(i) => removeDraft(m, i)} onPickTime={(c) => void send(c)} onConfirm={() => confirm(m)} />
                 ) : null}
@@ -215,6 +224,7 @@ export function TaraChat({ greeting, onFocusInput }: { greeting: string; /** let
             ))}
           </ScrollView>
         ) : null}
+        {isBusy ? <TaraThoughts /> : null}
 
         <View className="flex-row items-center gap-2">
           <Pressable

@@ -1,5 +1,6 @@
+import { Asset } from 'expo-asset';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -7,7 +8,8 @@ import { Field } from '@/components/Field';
 import { Segmented } from '@/components/Segmented';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { normalizeServer, useAiStore, voiceServerKey, type AiSource, type RemoteSource } from '@/lib/ai/aiSources';
-import { listModels, remoteChat, voiceServerHeaders } from '@/lib/ai/remoteChat';
+import { isThinkingModel, listModels, remoteChat, voiceServerHeaders } from '@/lib/ai/remoteChat';
+import { heroArtFor } from '@/lib/hero/heroArt';
 import { useT } from '@/lib/i18n/translate';
 import { PALETTE } from '@/lib/theme/palette';
 import type { CapabilityId } from '@/types/catalog';
@@ -63,7 +65,19 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
   const model = source.kind === 'device' ? '' : source.model;
   // a Whisper server usually listens on 8080; Ollama on 11434
   const port = needs === 'audio' ? 8080 : 11434;
-  const remote = (m: string): RemoteSource => (source.kind === 'cloud' ? { kind: 'cloud', model: m } : { kind: 'lan', base_url: normalizeServer(server, port), model: m });
+  const think = source.kind === 'lan' ? source.think : undefined;
+  const remote = (m: string): RemoteSource => (source.kind === 'cloud' ? { kind: 'cloud', model: m } : { kind: 'lan', base_url: normalizeServer(server, port), model: m, think });
+  const [canThink, setCanThink] = useState(false);
+  const lanModelKey = source.kind === 'lan' && needs !== 'audio' && source.model ? `${source.base_url}|${source.model}` : '';
+  useEffect(() => {
+    setCanThink(false);
+    if (!lanModelKey || source.kind !== 'lan') return;
+    let isCurrent = true;
+    void isThinkingModel(source).then((yes) => isCurrent && setCanThink(yes));
+    return () => {
+      isCurrent = false;
+    };
+  }, [lanModelKey]);
 
   const pickKind = (kind: AiSource['kind']) => {
     setModels([]);
@@ -102,8 +116,13 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
         return t('Voice server reachable', 'Naaabot ang voice server');
       }
       const started = Date.now();
-      const reply = await remoteChat(remote(model), [{ role: 'user', content: 'Reply with only the word OK.' }], { maxTokens: 5, temperature: 0 });
-      return t(`Works: "${reply.trim().slice(0, 20)}" in ${Date.now() - started} ms`, `Gumagana: "${reply.trim().slice(0, 20)}" sa ${Date.now() - started} ms`);
+      let thoughtChars = 0;
+      // a photo model gets a real picture: vision-only models (moondream) answer nothing to a text-only prompt
+      const imagePath = needs === 'image' ? ((await Asset.fromModule(heroArtFor(1)).downloadAsync()).localUri ?? undefined) : undefined;
+      const prompt = needs === 'image' ? 'What is in this picture? Answer in one short sentence.' : 'Reply with only the word OK.';
+      const reply = await remoteChat(remote(model), [{ role: 'user', content: prompt }], { maxTokens: needs === 'image' ? 60 : 20, temperature: 0, imagePath, onThinking: (r) => (thoughtChars = r.length) });
+      const thought = thoughtChars ? t(`, after ${thoughtChars} characters of thinking`, `, pagkatapos mag-isip ng ${thoughtChars} na titik`) : '';
+      return t(`Works: "${reply.trim().slice(0, 60)}" in ${Date.now() - started} ms${thought}`, `Gumagana: "${reply.trim().slice(0, 60)}" sa ${Date.now() - started} ms${thought}`);
     });
 
   const shown = models.filter((m) => m.toLowerCase().includes(search.toLowerCase())).slice(0, 12);
@@ -179,6 +198,25 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
             </View>
           ) : null}
           <Field label={t('Model', 'Model')} value={model} onChangeText={(m) => setSource(capability, remote(m.trim()))} placeholder={source.kind === 'lan' ? (needs === 'audio' ? 'whisper-1' : 'gemma3:4b') : 'google/gemini-2.5-flash'} autoCapitalize="none" />
+          {canThink && source.kind === 'lan' ? (
+            <View className="flex-row items-center justify-between gap-3">
+              <View className="flex-1">
+                <Text className="text-base font-bold text-ink-900">{t('Let it think', 'Hayaang mag-isip')}</Text>
+                <Text className="text-sm text-tara-700">
+                  {t(
+                    "This model can reason before it answers. On: smarter but slower, and you see Tara's thoughts. Off: answers right away. Quick yes/no checks never think.",
+                    'Kaya ng model na ito na mag-isip bago sumagot. On: mas matalino pero mas mabagal, at makikita mo ang iniisip ni Tara. Off: sasagot agad. Hindi nag-iisip ang mabilisang oo/hindi.',
+                  )}
+                </Text>
+              </View>
+              <Switch
+                value={source.think === true}
+                trackColor={{ true: PALETTE.sipag500, false: PALETTE.banig300 }}
+                thumbColor={PALETTE.white}
+                onValueChange={(on) => setSource(capability, { ...source, think: on })}
+              />
+            </View>
+          ) : null}
           <Button label={t('Test', 'Subukan')} variant="secondary" icon={null} isBusy={isBusy} disabled={!model} onPress={() => void test()} />
         </>
       ) : null}

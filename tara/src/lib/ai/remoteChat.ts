@@ -1,11 +1,27 @@
 import { File } from 'expo-file-system';
 
 import { cloudKey, voiceServerKey, type RemoteSource } from '@/lib/ai/aiSources';
+import { streamChat } from '@/lib/ai/streamChat';
 import type { ChatMessage } from '@/types/chat';
 
 const OPENROUTER = 'https://openrouter.ai/api/v1';
 
-type RemoteOptions = { maxTokens?: number; temperature?: number; responseFormat?: unknown; imagePath?: string; audioPath?: string };
+type RemoteOptions = {
+  maxTokens?: number;
+  temperature?: number;
+  responseFormat?: unknown;
+  imagePath?: string;
+  audioPath?: string;
+  /** receives a thinking model's reasoning so far, when the source lets it think */
+  onThinking?: (reasoning: string) => void;
+  /** receives the answer so far while it streams */
+  onToken?: (textSoFar: string) => void;
+};
+
+// extra room for the reasoning itself, on top of the answer's budget, when a model may think
+const THINKING_BUDGET = 2048;
+// probes this short (yes or no) never think: a few hundred tokens of reasoning per probe would take minutes
+const PROBE_TOKENS = 8;
 type ContentPart =
   | { type: 'text'; text: string }
   | { type: 'image_url'; image_url: { url: string } }
@@ -27,7 +43,7 @@ const thinkingModels = new Map<string, Promise<boolean>>();
  * spend the whole token budget thinking and answer with empty text, and ignore the think flag on both endpoints.
  * Asked once per model per app run.
  */
-function isThinkingModel(source: RemoteSource): Promise<boolean> {
+export function isThinkingModel(source: RemoteSource): Promise<boolean> {
   if (source.kind !== 'lan') return Promise.resolve(false);
   const key = `${source.base_url}|${source.model}`;
   const known = thinkingModels.get(key);
@@ -64,30 +80,44 @@ async function endpoint(source: RemoteSource): Promise<{ url: string; headers: R
 export async function remoteChat(source: RemoteSource, messages: ChatMessage[], options: RemoteOptions = {}): Promise<string> {
   const { url, headers } = await endpoint(source);
   const attachment: ContentPart | null = options.imagePath
-    ? { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${await fileBase64(options.imagePath)}` } }
+    ? { type: 'image_url', image_url: { url: `data:image/${/\.png$/i.test(options.imagePath) ? 'png' : 'jpeg'};base64,${await fileBase64(options.imagePath)}` } }
     : options.audioPath
       ? { type: 'input_audio', input_audio: { data: await fileBase64(options.audioPath), format: 'wav' } }
       : null;
   const sent = messages.map((m, i) =>
     attachment && i === messages.length - 1 && m.role === 'user' ? { role: m.role, content: [attachment, { type: 'text', text: m.content }] } : { role: m.role, content: m.content },
   );
+  const maxTokens = options.maxTokens ?? 256;
+  const canThink = await isThinkingModel(source);
+  const letThink = canThink && source.kind === 'lan' && source.think === true && maxTokens > PROBE_TOKENS;
   const body = {
     model: source.model,
-    messages: (await isThinkingModel(source)) ? [...sent, SKIP_THINKING] : sent,
-    max_tokens: options.maxTokens ?? 256,
+    messages: canThink && !letThink ? [...sent, SKIP_THINKING] : sent,
+    max_tokens: letThink ? maxTokens + THINKING_BUDGET : maxTokens,
     temperature: options.temperature ?? 0.3,
     stream: false,
     ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
   };
+  if (letThink) {
+    const streamed = await streamChat(url, headers, body, (reasoning, content) => {
+      if (reasoning) options.onThinking?.(reasoning);
+      if (content) options.onToken?.(content);
+    }, 240_000);
+    return cleanAnswer(streamed.content);
+  }
   const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(90_000) });
   const json: unknown = await res.json().catch(() => null);
   if (!res.ok) throw new Error(`${source.kind === 'lan' ? 'Laptop' : 'OpenRouter'} said ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
   const choices = field(json, 'choices');
   const text = Array.isArray(choices) ? field(field(choices[0], 'message'), 'content') : undefined;
   if (typeof text !== 'string') throw new Error('The server sent a reply Tara could not read');
+  return cleanAnswer(text);
+}
+
+/** Drops any inline think block; an empty answer is a failure, so runAi falls back to the phone instead of judging nothing. */
+function cleanAnswer(text: string): string {
   const answer = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-  // an empty answer is a failure, so runAi falls back to the phone instead of judging nothing
-  if (!answer) throw new Error('The model sent an empty answer (it may have used its whole budget thinking)');
+  if (!answer) throw new Error('The model sent an empty answer. Some vision models (moondream) only describe photos and answer nothing to short questions; a thinking model may have used its whole budget thinking.');
   return answer;
 }
 

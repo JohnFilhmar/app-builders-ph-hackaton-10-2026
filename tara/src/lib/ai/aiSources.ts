@@ -6,7 +6,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { CapabilityId } from '@/types/catalog';
 
 /** Where one AI job runs: the downloaded on-device model, an Ollama laptop on the LAN, or OpenRouter in the cloud. */
-export type AiSource = { kind: 'device' } | { kind: 'lan'; base_url: string; model: string } | { kind: 'cloud'; model: string };
+/** `think` lets a laptop reasoning model think before it answers (slower, and Tara shows the thoughts); off skips thinking. */
+export type AiSource = { kind: 'device' } | { kind: 'lan'; base_url: string; model: string; think?: boolean } | { kind: 'cloud'; model: string };
 export type RemoteSource = Exclude<AiSource, { kind: 'device' }>;
 
 type AiStore = {

@@ -12,6 +12,7 @@ import { QuizPanel } from '@/components/quest/QuizPanel';
 import { QuizPrep } from '@/components/quest/QuizPrep';
 import { ReadAloudProof } from '@/components/quest/ReadAloudProof';
 import { ResultPanel } from '@/components/quest/ResultPanel';
+import { TaraThoughts } from '@/components/tara/TaraThoughts';
 import { BlockBar } from '@/components/tara/LevelBar';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
@@ -333,6 +334,7 @@ export default function QuestRun() {
       ) : null}
 
       {phase === 'checking' ? <TaraBubble text={stage} isThinking /> : null}
+      {phase === 'checking' ? <TaraThoughts /> : null}
 
       {phase === 'result' && outcome ? (
         <ResultPanel
