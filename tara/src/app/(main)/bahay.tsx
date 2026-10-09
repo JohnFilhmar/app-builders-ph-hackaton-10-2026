@@ -39,7 +39,7 @@ export default function Bahay() {
     <TaraScreen>
       <View className="h-80 overflow-hidden rounded-3xl bg-banig-100">
         <AvatarStage className="flex-1" />
-        <Text className="absolute bottom-2 w-full text-center text-xs text-tara-500">Tap your hero</Text>
+        <Text className="absolute right-3 top-3 rounded-full bg-white/80 px-2 py-1 text-xs text-tara-500">Tap your hero</Text>
       </View>
       <LevelBar state={state} />
       <TaraBubble text={line} />

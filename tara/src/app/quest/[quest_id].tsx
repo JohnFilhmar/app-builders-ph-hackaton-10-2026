@@ -16,7 +16,7 @@ import { highestCount, scoreReading } from '@/lib/checks/scoring';
 import { completeQuest } from '@/lib/game/completeQuest';
 import { COUNTING_PROMPT, PASSAGES, QUEST_INFO } from '@/lib/quests/questTypes';
 import { useGameStore } from '@/lib/stores/gameStore';
-import { useQuestStore } from '@/lib/stores/questStore';
+import { useQuestStore, type QuestWork } from '@/lib/stores/questStore';
 import type { ProofTier } from '@/types/gameEvents';
 import type { CheckOutcome } from '@/types/quest';
 import { errorMessage } from '@/utils/errorMessage';
@@ -32,6 +32,8 @@ async function takePhoto(): Promise<string | null> {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+// one shared empty value: a fresh {} per selector call would re-render forever
+const NO_WORK: QuestWork = {};
 
 /** Runs one quest end to end: start step, timer, proof, Tara's check and the result. */
 export default function QuestRun() {
@@ -44,7 +46,7 @@ export default function QuestRun() {
   const events = useGameStore((s) => s.events);
   const multiplier = useGameStore((s) => s.state.streak.multiplier);
   const append = useGameStore((s) => s.append);
-  const work = useQuestStore((s) => s.work[questId ?? ''] ?? {});
+  const work = useQuestStore((s) => s.work[questId ?? ''] ?? NO_WORK);
   const patch = useQuestStore((s) => s.patch);
   const clear = useQuestStore((s) => s.clear);
 

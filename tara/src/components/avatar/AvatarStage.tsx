@@ -83,7 +83,8 @@ function Avatar({ model, jumpRequest, onJumpDone }: AvatarProps) {
 
   return (
     <group ref={root}>
-      <primitive object={model.scene} />
+      {/* the placeholder rig is authored facing away from the camera */}
+      <primitive object={model.scene} rotation={[0, Math.PI, 0]} />
     </group>
   );
 }

@@ -7,7 +7,7 @@ export default function MainTabs() {
         headerShown: false,
         tabBarActiveTintColor: '#5C3A1A',
         tabBarInactiveTintColor: '#C79A6B',
-        tabBarStyle: { backgroundColor: '#FDF2DC', borderTopColor: '#F6E2B8', height: 64 },
+        tabBarStyle: { backgroundColor: '#FDF2DC', borderTopColor: '#F6E2B8' },
         tabBarIconStyle: { display: 'none' },
         tabBarLabelStyle: { fontSize: 16, fontWeight: '800' },
         tabBarLabelPosition: 'beside-icon',

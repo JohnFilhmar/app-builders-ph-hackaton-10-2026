@@ -13,7 +13,7 @@ export function TaraScreen({ title, subtitle, children, scroll = true }: TaraScr
     </View>
   ) : null;
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-banig-50">
+    <SafeAreaView edges={scroll ? ['top'] : ['top', 'bottom']} className="flex-1 bg-banig-50">
       {scroll ? (
         <ScrollView contentContainerClassName="gap-4 p-4 pb-20" keyboardShouldPersistTaps="handled">
           {heading}
