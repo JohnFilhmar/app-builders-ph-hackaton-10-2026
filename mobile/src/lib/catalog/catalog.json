@@ -1,0 +1,362 @@
+{
+  "version": "2026-10-09.1",
+  "defaults": {
+    "chat": "qwen2.5-0.5b-q4",
+    "translate": "gemma-3-1b-q4",
+    "stt": "whisper-base-q5",
+    "tts": "system-tts",
+    "describe": "smolvlm-256m-q8",
+    "image_gen": "sdxs-512"
+  },
+  "models": [
+    {
+      "id": "qwen2.5-0.5b-q4",
+      "label": "Qwen2.5 0.5B Instruct Q4_K_M",
+      "tasks": [
+        "chat",
+        "translate"
+      ],
+      "runtime": "llama",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Smallest chat baseline. Expect weak Tagalog.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "file_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+          "size_bytes": 491400032,
+          "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+        }
+      ]
+    },
+    {
+      "id": "qwen2.5-1.5b-q4",
+      "label": "Qwen2.5 1.5B Instruct Q4_K_M",
+      "tasks": [
+        "chat",
+        "translate"
+      ],
+      "runtime": "llama",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Mid-size candidate. Needs about 1.5 GB free RAM.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+          "file_name": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+          "size_bytes": 1117320736,
+          "sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
+        }
+      ]
+    },
+    {
+      "id": "gemma-3-1b-q4",
+      "label": "Gemma 3 1B IT Q4_K_M (unsloth, ungated)",
+      "tasks": [
+        "chat",
+        "translate"
+      ],
+      "runtime": "llama",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "Gemma Terms of Use",
+      "notes": "Gemma is trained on 140+ languages. Best Tagalog candidate at this size.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf",
+          "file_name": "gemma-3-1b-it-Q4_K_M.gguf",
+          "size_bytes": 806058272,
+          "sha256": "8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd"
+        }
+      ]
+    },
+    {
+      "id": "whisper-tiny-q5",
+      "label": "Whisper tiny (multilingual) Q5_1",
+      "tasks": [
+        "stt"
+      ],
+      "runtime": "whisper",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "MIT",
+      "notes": "Fastest. Tagalog accuracy expected to be poor.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q5_1.bin",
+          "file_name": "ggml-tiny-q5_1.bin",
+          "size_bytes": 32152673,
+          "sha256": "818710568da3ca15689e31a743197b520007872ff9576237bda97bd1b469c3d7"
+        }
+      ]
+    },
+    {
+      "id": "whisper-base-q5",
+      "label": "Whisper base (multilingual) Q5_1",
+      "tasks": [
+        "stt"
+      ],
+      "runtime": "whisper",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "MIT",
+      "notes": "Default STT. Check Taglish code-switching.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q5_1.bin",
+          "file_name": "ggml-base-q5_1.bin",
+          "size_bytes": 59707625,
+          "sha256": "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898"
+        }
+      ]
+    },
+    {
+      "id": "whisper-small-q5",
+      "label": "Whisper small (multilingual) Q5_1",
+      "tasks": [
+        "stt"
+      ],
+      "runtime": "whisper",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "MIT",
+      "notes": "Tagalog candidate. Slower, check real-time factor.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin",
+          "file_name": "ggml-small-q5_1.bin",
+          "size_bytes": 190085487,
+          "sha256": "ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb"
+        }
+      ]
+    },
+    {
+      "id": "system-tts",
+      "label": "Phone system TTS (fil-PH / en-US)",
+      "tasks": [
+        "tts"
+      ],
+      "runtime": "system_tts",
+      "languages": [
+        "en",
+        "tl"
+      ],
+      "license": "OS built-in",
+      "notes": "Android Google TTS has a Filipino voice. Install the voice pack for offline use.",
+      "files": []
+    },
+    {
+      "id": "kokoro-en-us",
+      "label": "Kokoro 82M en-US (ExecuTorch)",
+      "tasks": [
+        "tts"
+      ],
+      "runtime": "kokoro",
+      "languages": [
+        "en"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Neural TTS, English only. ExecuTorch downloads about 350 MB on first load.",
+      "files": []
+    },
+    {
+      "id": "smolvlm-256m-q8",
+      "label": "SmolVLM 256M Instruct Q8_0",
+      "tasks": [
+        "describe"
+      ],
+      "runtime": "llama",
+      "languages": [
+        "en"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Tiny vision model. English output; test Tagalog prompts anyway.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/ggml-org/SmolVLM-256M-Instruct-GGUF/resolve/main/SmolVLM-256M-Instruct-Q8_0.gguf",
+          "file_name": "SmolVLM-256M-Instruct-Q8_0.gguf",
+          "size_bytes": 175054528,
+          "sha256": "2a31195d3769c0b0fd0a4906201666108834848db768af11de1d2cef7cd35e65"
+        },
+        {
+          "role": "mmproj",
+          "url": "https://huggingface.co/ggml-org/SmolVLM-256M-Instruct-GGUF/resolve/main/mmproj-SmolVLM-256M-Instruct-Q8_0.gguf",
+          "file_name": "mmproj-SmolVLM-256M-Instruct-Q8_0.gguf",
+          "size_bytes": 103769856,
+          "sha256": "7e943f7c53f0382a6fc41b6ee0c2def63ba4fded9ab8ed039cc9e2ab905e0edd"
+        }
+      ]
+    },
+    {
+      "id": "smolvlm-500m-q8",
+      "label": "SmolVLM 500M Instruct Q8_0",
+      "tasks": [
+        "describe"
+      ],
+      "runtime": "llama",
+      "languages": [
+        "en"
+      ],
+      "license": "Apache-2.0",
+      "notes": "Bigger vision candidate.",
+      "files": [
+        {
+          "role": "model",
+          "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/SmolVLM-500M-Instruct-Q8_0.gguf",
+          "file_name": "SmolVLM-500M-Instruct-Q8_0.gguf",
+          "size_bytes": 436806912,
+          "sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4"
+        },
+        {
+          "role": "mmproj",
+          "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+          "file_name": "mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+          "size_bytes": 108783360,
+          "sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150"
+        }
+      ]
+    },
+    {
+      "id": "sdxs-512",
+      "label": "SDXS 512 DreamShaper (ExecuTorch XNNPACK)",
+      "tasks": [
+        "image_gen"
+      ],
+      "runtime": "sdxs",
+      "languages": [
+        "en"
+      ],
+      "license": "Check model card before shipping",
+      "notes": "Optional. ExecuTorch downloads it on first load. Heavy: may OOM on 4 GB phones.",
+      "files": []
+    }
+  ],
+  "prompts": {
+    "chat": {
+      "en": [
+        "Give me three tips to prepare for a typhoon.",
+        "Explain what a barangay health center does in two sentences.",
+        "What should I bring to a job interview?"
+      ],
+      "tl": [
+        "Magbigay ng tatlong tip para maghanda sa bagyo.",
+        "Ipaliwanag sa dalawang pangungusap kung ano ang ginagawa ng barangay health center.",
+        "Pwede mo ba akong tulungan mag-budget ng 500 pesos for one week na pagkain?"
+      ]
+    },
+    "translate": {
+      "en": [
+        "The evacuation center is at the elementary school.",
+        "Please take this medicine twice a day after meals.",
+        "Where is the nearest hospital?"
+      ],
+      "tl": [
+        "Nasaan ang pinakamalapit na ospital?",
+        "Inumin ang gamot na ito dalawang beses sa isang araw pagkatapos kumain.",
+        "Sarado ang daan dahil sa baha."
+      ]
+    },
+    "stt": {
+      "en": [
+        "The jeepney to Quiapo leaves every fifteen minutes.",
+        "Please call the barangay hall before noon."
+      ],
+      "tl": [
+        "Aalis ang jeep papuntang Quiapo kada labinlimang minuto.",
+        "Tumawag ka sa barangay hall bago magtanghali, okay?"
+      ]
+    },
+    "tts": {
+      "en": [
+        "Good morning! The weather today is sunny with a chance of rain in the afternoon."
+      ],
+      "tl": [
+        "Magandang umaga! Maaraw ngayon pero posibleng umulan mamayang hapon."
+      ]
+    },
+    "describe": {
+      "en": [
+        "Describe this image in one sentence.",
+        "What objects are in this picture?"
+      ],
+      "tl": [
+        "Ilarawan ang larawang ito sa isang pangungusap.",
+        "Anong mga bagay ang nasa larawan?"
+      ]
+    },
+    "image_gen": {
+      "en": [
+        "a jeepney on a sunny Manila street, digital art",
+        "a bowl of halo-halo on a wooden table, photo"
+      ],
+      "tl": [
+        "isang jeepney sa maaraw na kalye ng Maynila"
+      ]
+    }
+  },
+  "commands": [
+    {
+      "intent": "take_photo",
+      "phrases": [
+        "take a photo",
+        "take a picture",
+        "kumuha ng litrato",
+        "picture"
+      ]
+    },
+    {
+      "intent": "translate",
+      "phrases": [
+        "translate",
+        "isalin",
+        "salin"
+      ]
+    },
+    {
+      "intent": "read_aloud",
+      "phrases": [
+        "read aloud",
+        "read it",
+        "basahin"
+      ]
+    },
+    {
+      "intent": "stop",
+      "phrases": [
+        "stop",
+        "cancel",
+        "tigil",
+        "hinto"
+      ]
+    },
+    {
+      "intent": "help",
+      "phrases": [
+        "help",
+        "tulong",
+        "saklolo"
+      ]
+    }
+  ]
+}
