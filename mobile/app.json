@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "ph.appbuilders.localailab"
+      "bundleIdentifier": "ph.appbuilders.localailab",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSLocalNetworkUsageDescription": "Connects to the team laptop for the model catalog, model mirror and results table.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "ph.appbuilders.localailab",
