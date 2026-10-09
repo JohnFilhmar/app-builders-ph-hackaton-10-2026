@@ -7,7 +7,7 @@ import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const CATALOG_PATH = join(ROOT, '..', 'mobile', 'src', 'lib', 'catalog', 'catalog.json');
+const CATALOG_PATH = join(ROOT, '..', 'ai-feasibility', 'src', 'lib', 'catalog', 'catalog.json');
 const MODELS_DIR = join(ROOT, 'models');
 const DATA_DIR = join(ROOT, 'data');
 const RESULTS_PATH = join(DATA_DIR, 'results.json');
