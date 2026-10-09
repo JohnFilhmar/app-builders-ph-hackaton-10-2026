@@ -30,15 +30,70 @@ Tara turns daily routines into a game where **the user decides what counts and t
 
 **First step:** storyboard the three-minute demo frame by frame and write the five Phase 1 quest cards with their proof rules.
 
+## MVP scope: levels 1 to 3
+
+The working MVP stops at level 3, Masipag, at 400 XP. Every cosmetic comes in three tiers, and reaching level N unlocks tier N in every slot, so a new user starts with one of everything and owns the full set after about two days of steady use. Where this section and the later sections disagree, this section wins for the MVP; levels 4 to 12 and everything tied to them are post-MVP.
+
+| Level | XP to reach | Avatar items | Companion | Aura | Features |
+| --- | --- | --- | --- | --- | --- |
+| 1 Baguhan (Beginner) | 0 | Base avatar (male or female) with tier 1 hair, torso, lower, shoes and weapon | Tara | Sinag | Linis, Aral, Basa and Sariling Gawain quests; Before & After; dispute button; backup file; Nanay Mode (opt-in setting) |
+| 2 Masigla (Lively) | 150 | Tier 2 in every slot | Bugoy | Alitaptap | Ehersisyo with Bilang Mode; Pabuya list |
+| 3 Masipag (Hardworking) | 400 | Tier 3 in every slot | Haribon | Bahaghari | Baon Days |
+| 4 and up | Not yet | "Malapit na" (coming soon) card | Not yet | Not yet | XP keeps banking |
+
+**Base avatar.** The user picks male or female at onboarding and can switch later in the wardrobe. Owned tiers carry over: someone at level 2 who switches owns tier 1 and tier 2 of the other set too.
+
+**Male set**
+
+| Slot | Level 1 | Level 2 | Level 3 |
+| --- | --- | --- | --- |
+| Hair | Gupit Barbero (barbershop cut) | Undercut | Kulot (curly) |
+| Torso | Puting T-shirt (white tee) | Basketball jersey | Barong |
+| Lower | Shorts | Maong (jeans) | Slacks |
+| Shoes | Tsinelas (flip-flops) | Rubber shoes | Leather shoes |
+| Weapon, left or right hand | Lapis (giant pencil) | Walis Tingting (stick broom) | Arnis baston (fighting stick) |
+
+**Female set**
+
+| Slot | Level 1 | Level 2 | Level 3 |
+| --- | --- | --- | --- |
+| Hair | Tali (ponytail) | Bob | Mahabang Kulot (long curls) |
+| Torso | Puting T-shirt (white tee) | Varsity jacket | Filipiniana blouse (butterfly sleeves) |
+| Lower | Shorts | Palda (skirt) | Saya (long skirt) |
+| Shoes | Tsinelas (flip-flops) | Rubber shoes | Bakya (wooden clogs) |
+| Weapon, left or right hand | Abaniko (fan) | Sandok (giant ladle) | Payong-Kalasag (umbrella shield) |
+
+Weapons are cosmetic only: there is no combat. The user chooses which hand holds it, the avatar carries it while idle, and raises it during the celebrate emote.
+
+**Companions.** One is active at a time, and its colors can be changed any time from 8 body swatches and 8 accent swatches.
+
+| Level | Companion | Who |
+| --- | --- | --- |
+| 1 | Tara | A Philippine tarsier, the default companion who checks proof |
+| 2 | Bugoy | A carabao calf |
+| 3 | Haribon | A Philippine eagle chick |
+
+**Auras.** One is equipped at a time, and it flares during the celebrate emote.
+
+| Level | Aura | Look |
+| --- | --- | --- |
+| 1 | Sinag (ray of light) | A soft glowing ring at the avatar's feet |
+| 2 | Alitaptap (fireflies) | Small lights circling the avatar |
+| 3 | Bahaghari (rainbow) | A slow rainbow swirl |
+
+**Past level 3.** When XP passes 400, the bar stays full and a card appears once: "Malapit na ang Level 4!" (Level 4 is coming soon!). A small "Malapit na" badge stays on the level bar, and each wardrobe slot ends with one "Malapit na" tile. XP keeps counting and banking, and the card shows the total, for example "Naipon mo na: 520 XP" (You've saved up 520 XP), so nothing is lost when level 4 ships.
+
+**Asset count for the MVP:** 38 items. That is 2 base avatars, 30 avatar items (5 slots, 3 tiers, 2 sets), 3 companions and 3 auras.
+
 ## Product summary
 
-Tara LEVEL UP! is a fully offline Android app for Filipino students, young workers and families sharing one phone, in English, Tagalog or Taglish. The user declares a quest (cleaning, a study block, reading aloud, exercise, or a task of their own) and proves it happened with a Before & After photo pair, a quiz built from a photo of their own notes, a read-aloud check, or reps counted aloud. Their companion Tara, a tarsier, checks the proof and awards "Sipag" (diligence) points, multiplied by how strong the proof is.
+Tara LEVEL UP! is a fully offline Android app for Filipino students, young workers and families sharing one phone, in English, Tagalog or Taglish. The user declares a quest (cleaning, a study block, reading aloud, exercise, or a task of their own) and proves it happened with a Before & After photo pair, a quiz built from a photo of their own notes, a read-aloud check, or reps counted aloud. The user plays as a male or female avatar they dress up as they level, and their companion, Tara the tarsier at the start, checks the proof and awards "Sipag" (diligence) points, multiplied by how strong the proof is.
 
-Points fill a bar through twelve named levels, from Baguhan (Beginner) to Alamat (Legend), and unlock characters, outfits, rooms, sounds, features and real-world rewards. Nothing leaves the phone: photos delete themselves after 7 days, voice is never stored, and the app works the same in a brownout or in airplane mode. On screen, XP reads "+15 Sipag" and quests are called "Gawain" (tasks); this spec says XP and quest for clarity.
+Points fill a bar through twelve named levels, from Baguhan (Beginner) to Alamat (Legend), and unlock wearables, weapons, companions, auras, features and real-world rewards. The MVP stops at level 3. Nothing leaves the phone: photos delete themselves after 7 days, voice is never stored, and the app works the same in a brownout or in airplane mode. On screen, XP reads "+15 Sipag" and quests are called "Gawain" (tasks); this spec says XP and quest for clarity.
 
 ## Core gameplay loop
 
-One weekday for a college student at level 4.
+One weekday for a college student at level 3, the MVP ceiling.
 
 1. **6:30, wake-up.** A gentle chime. Tara: "Magandang umaga! Ano'ng plano natin today?" (Good morning! What's our plan today?)
 2. **6:35, plan.** The user types or says 3 to 5 quests. Tara suggests a duration and a proof type for each, and never refuses one.
@@ -55,13 +110,15 @@ One weekday for a college student at level 4.
 
 Twelve levels take about three months at a typical 200 XP a day: level 5 in roughly a week, level 10 in about six weeks. The 300 XP daily cap means no one reaches Alamat in under 57 days.
 
+In the MVP only levels 1 to 3 are live. Levels 4 to 12 below are the post-MVP plan and show as "Malapit na" (coming soon) until they ship.
+
 | Level | Name | XP to reach | Unlocks | Phase |
 | --- | --- | --- | --- | --- |
-| 1 | Baguhan (Beginner) | 0 | Tara; Linis, Aral, Basa and Sariling Gawain quests; Before & After; dispute button; backup file | P1 |
-| 2 | Masigla (Lively) | 150 | Ehersisyo with Bilang Mode (count aloud); Bukang-liwayway (Dawn) theme | P1 |
-| 3 | Masipag (Hardworking) | 400 | Baon Days (saved days that protect the streak); Uniporme (uniform) outfit | P1 |
-| 4 | Matiyaga (Persistent) | 800 | Pabuya list; Kampana (church bell) sound pack | P1 |
-| 5 | Maaasahan (Dependable) | 1,400 | Nanay Mode; Tag-ulan (Rainy season) theme | P1 |
+| 1 | Baguhan (Beginner) | 0 | Avatar with tier 1 items, companion Tara and Sinag aura (see MVP scope); Linis, Aral, Basa and Sariling Gawain quests; Before & After; dispute button; backup file; Nanay Mode setting | P1 |
+| 2 | Masigla (Lively) | 150 | Tier 2 items, companion Bugoy and Alitaptap aura; Ehersisyo with Bilang Mode (count aloud); Pabuya list | P1 |
+| 3 | Masipag (Hardworking) | 400 | Tier 3 items, companion Haribon and Bahaghari aura; Baon Days (saved days that protect the streak) | P1 |
+| 4 | Matiyaga (Persistent) | 800 | Coming soon: Kampana (church bell) sound pack; Bukang-liwayway (Dawn) theme | P2 |
+| 5 | Maaasahan (Dependable) | 1,400 | Coming soon: Tag-ulan (Rainy season) theme | P2 |
 | 6 | Masinop (Orderly) | 2,200 | Coach Ate Ces, daily quests, end-of-day summary | P2 |
 | 7 | Bihasa (Skilled) | 3,300 | Ikaw Kahapon rival; Barong/Filipiniana outfit | P2 |
 | 8 | Matatag (Steadfast) | 4,700 | Sunod-sunod (back-to-back) quest chains; Dorm room | P2 |
@@ -89,6 +146,8 @@ Twelve levels take about three months at a typical 200 XP a day: level 5 in roug
 
 Seven characters, and none of them shames the user: the rival is your own past week, and a friend rival only exists if both people opt in face to face.
 
+The MVP ships the player's avatar and the three companions from MVP scope: Tara, Bugoy and Haribon. Ate Ces, Ikaw Kahapon, Lola Ising, Kuya Jun, Bunso and the Barkada ghost are post-MVP.
+
 | Character | Role | Unlock | Sample line | Phase |
 | --- | --- | --- | --- | --- |
 | Tara, a Philippine tarsier with happy, cheering and sleepy moods | Companion who checks proof and names what changed | Start | "Tara, simulan na natin! Konting linis lang, kaya mo 'yan." (Let's start! Just a bit of cleaning, you can do it.) | P1 |
@@ -99,7 +158,52 @@ Seven characters, and none of them shames the user: the rival is your own past w
 | Bunso (Youngest), Tara's baby tarsier cousin | Companion for child profiles in Reading Buddy | A parent creates a child profile and gives consent | "Basa tayo! Isang page lang, tapos sticker!" (Let's read! Just one page, then a sticker!) | P2 |
 | Barkada ghost (friend ghost), a friend's weekly record traded by QR in person | Friendly rival with no server and no leaderboard; both sides opt in | Level 11 | "Si Migs, 3 Patunay na today. Ikaw?" (Migs already has 3 Patunay today. You?) | P3 |
 
+## Emote system
+
+The avatar and the companion react through one shared list of nine emotes. App events trigger emotes directly with no AI involved, and when the companion chats, the AI may only pick one emote from this list; it never invents moves or controls body parts.
+
+**Three layers**
+
+1. **Idle loop.** Always running, nobody decides it. The avatar breathes and sways slightly; the companion blinks and hops now and then.
+2. **Event reactions.** Fixed rules from the table below.
+3. **Chat reactions.** With each reply, the companion picks one emote to go with its words.
+
+| Emote | What it looks like |
+| --- | --- |
+| idle | Slow breathing bob and a small sway |
+| think | Head tilts side to side in a loop |
+| nod | Two quick forward dips, meaning "tama" (right) |
+| shake | Small side-to-side turn, a gentle "not quite" |
+| cheer | One small hop |
+| celebrate | Jump, full spin, weapon raised, aura flares |
+| wave | Sway with the weapon hand raised |
+| comfort | Companion leans in toward the avatar |
+| sleepy | Slow sink and lean, eyes droop |
+
+There is no sad or disappointed emote. Missing a day or disputing a check never makes either character look let down.
+
+| Event | Avatar | Companion |
+| --- | --- | --- |
+| App opened | wave | wave |
+| User sends a message to the companion | idle | think, until the reply is ready |
+| Quest done at Sabi Ko or Nakita | cheer | cheer |
+| Quest done at Patunay | celebrate | celebrate |
+| Level up | celebrate, with the level-up effect | celebrate |
+| "Ginawa ko talaga" tapped | nod | comfort |
+| Comeback after 3 or more days | wave | cheer |
+| Bedtime reached | sleepy | sleepy |
+| "Malapit na" card shown | nod | think |
+
+**Rules**
+
+- An event emote wins over a chat emote when both happen at once.
+- Every emote plays once and returns to idle; only idle and think loop.
+- The companion starts think the moment a message is sent, so a slow answer never looks frozen.
+- Each emote must read clearly as a whole-body movement. Richer versions, such as an actual arm wave, can replace them later under the same names without changing any rule above.
+
 ## Assets, features and milestone effects
+
+For the MVP, the avatar, companion and aura sets in MVP scope replace the first table below. Its themes, Tara outfits, rooms, sounds and avatar items are post-MVP.
 
 | Type | Items and how they unlock |
 | --- | --- |
@@ -118,8 +222,8 @@ Seven characters, and none of them shames the user: the rival is your own past w
 | I-save ang progreso (Save progress) | Export a backup file and restore it on any phone | Level 1 | P1 |
 | Bilang Mode | Count exercise reps aloud | Level 2 | P1 |
 | Baon Days | Earn one saved day per 7-day streak, hold up to 2 | Level 3 | P1 |
-| Pabuya list | Set real rewards with an XP price | Level 4 | P1 |
-| Nanay Mode | Opt-in three-step alerts, volume cap, quiet mode | Level 5 | P1 |
+| Pabuya list | Set real rewards with an XP price | Level 2 | P1 |
+| Nanay Mode | Opt-in three-step alerts, volume cap, quiet mode | Setting, from start | P1 |
 | Profiles | Up to 4 profiles per phone, each with a PIN and its own Tara | From start once P2 ships | P2 |
 | Lipat Tara (Move Tara) | Move progress to a new phone by QR, no internet | From start once P2 ships | P2 |
 | Bagyo Pass (Storm pass) | Switch on streak protection for up to 3 days, once a month | From start once P2 ships | P2 |
@@ -135,7 +239,7 @@ Seven characters, and none of them shames the user: the rival is your own past w
 | --- | --- | --- | --- |
 | Quest done at Sabi Ko | "+15" pops and the bar fills | Soft "ting" | P1 |
 | Quest done at Patunay | Before and After cards slide together, gold PATUNAY stamp | Stamp thud and bright chime | P1 |
-| Level up | A banig (woven mat) banner unrolls, Tara jumps, confetti | Tagumpay brass flourish | P1 |
+| Level up | A banig (woven mat) banner unrolls, avatar and companion play celebrate, confetti | Tagumpay brass flourish | P1 |
 | Achievement | Badge drops like a hung medal | Palakpakan (clapping) | P1 |
 | 7-day streak | A parol lights one point per streak day | Bamboo wind chime | P2 |
 | Hidden achievement | Screen dims and a lantern reveals the badge | Low gong | P2 |
@@ -193,7 +297,7 @@ Hidden achievements show as "???" until earned. None reward bad sleep or late ni
 
 | Retention mechanic | Detail | Phase |
 | --- | --- | --- |
-| First 60 seconds | One quest ("Ayusin ang kama"), one Before & After, one level-up sound; locked systems stay hidden until they unlock | P1 |
+| First 60 seconds | Pick a male or female avatar, then one quest ("Ayusin ang kama"), one Before & After, one cheer; locked systems stay hidden until they unlock | P1 |
 | Comeback | +20 and a kind restart message after 3 or more days away | P1 |
 | Pabuya list | Rewards the user writes, with a price: "Milk tea, 500", "1 oras ML (an hour of Mobile Legends), 300", "Sine sa Linggo (Sunday movie), 1,500". Claims spend a separate balance, so levels never drop | P1 |
 | Parent approval | On a child profile, the parent's PIN approves each claim | P2 |
@@ -246,11 +350,11 @@ The user decides what is productive; Tara only checks that the evidence matches 
 
 Only Phase 1 is built for judging; Phases 2 and 3 go on the roadmap slide.
 
-**Phase 1: core loop.** Tara with three moods; five quest cards (Linis, Aral, Basa, Ehersisyo, Sariling Gawain); proof tiers, base XP, caps, repeat limit, streak multiplier, dispute path and clock flag; levels 1 to 5 with their unlocks; Phase 1 assets, effects and achievements; Baon Days, Pabuya list, Nanay Mode with a cap and quiet mode, comeback bonus, backup file, and the 60-second onboarding.
+**Phase 1: core loop.** Tara with three moods; five quest cards (Linis, Aral, Basa, Ehersisyo, Sariling Gawain); proof tiers, base XP, caps, repeat limit, streak multiplier, dispute path and clock flag; levels 1 to 3 with the MVP avatar, wearables, weapons, companions and auras; the emote system; the "Malapit na" card past level 3; Phase 1 effects and achievements; Baon Days, Pabuya list, Nanay Mode with a cap and quiet mode, comeback bonus, backup file, and the 60-second onboarding.
 
-By the end, the user can plan a day of quests, prove them with photos, quizzes, reading or counting, dispute a wrong check, level up to Maaasahan, claim a real reward, protect a streak, and back up their progress, all with no signal.
+By the end, the user can plan a day of quests, prove them with photos, quizzes, reading or counting, dispute a wrong check, reach Masipag wearing any of the 38 MVP items, claim a real reward, protect a streak, and back up their progress, all with no signal.
 
-**Phase 2: progression depth.** Levels 6 to 10; Ate Ces, Ikaw Kahapon, Lola Ising, Kuya Jun and Bunso; profiles, Reading Buddy with parent consent, Lipat Tara transfer, Bagyo Pass, Balik-Tara week, Pahinga days; daily and weekly quests, quest chains, Kabit, Repaso deck, Boss Week, hidden achievements, rooms, more outfits and sound packs.
+**Phase 2: progression depth.** Levels 4 to 10; Ate Ces, Ikaw Kahapon, Lola Ising, Kuya Jun and Bunso; profiles, Reading Buddy with parent consent, Lipat Tara transfer, Bagyo Pass, Balik-Tara week, Pahinga days; daily and weekly quests, quest chains, Kabit, Repaso deck, Boss Week, hidden achievements, rooms, more outfits and sound packs.
 
 By the end, the user can share one phone with family on separate profiles, let a younger sibling practice reading safely, move progress to a new phone without internet, duel their own past week, and keep a streak through a typhoon or a rest day.
 
@@ -262,7 +366,7 @@ By the end, the user can play through the Filipino calendar year, guide a younge
 
 1. **0:00 to 0:20.** Show airplane mode and Wi-Fi off. "No signal. Everything you see happens on this phone."
 2. **0:20 to 0:45.** The Linis Mesa timer is nearly done and the Before photo of a messy prop desk is on screen. The presenter clears the desk live.
-3. **0:45 to 1:15.** After photo. The cards slide together and Tara says "Nawala ang tatlong tasa at ang tambak ng papel. Malinis na!" (The three cups and the pile of paper are gone. It's clean!) PATUNAY lands, +45, level up to Masipag with the Tagumpay sound; the Uniporme outfit and Baon Days unlock.
+3. **0:45 to 1:15.** After photo. The cards slide together and Tara says "Nawala ang tatlong tasa at ang tambak ng papel. Malinis na!" (The three cups and the pile of paper are gone. It's clean!) PATUNAY lands, +45, level up to Masipag with the Tagumpay sound; tier 3 items, the Haribon companion, the Bahaghari aura and Baon Days unlock while the avatar and companion play celebrate.
 4. **1:15 to 1:55.** The Aral block ends. Photograph a page of Taglish notes, answer Tara's 3 questions, Patunay lands. "These notes never left this phone."
 5. **1:55 to 2:25.** Basa Nang Malakas. Hold to talk while the Nakikinig badge glows and read two Tagalog lines. Tara shows pace and one skipped word, then "Hindi na-save ang boses mo." (Your voice was not saved.)
 6. **2:25 to 2:45.** Open a quest Tara could not confirm and tap "Ginawa ko talaga". +15, no accusation.
