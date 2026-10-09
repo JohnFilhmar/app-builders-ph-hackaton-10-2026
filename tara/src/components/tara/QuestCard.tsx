@@ -4,13 +4,14 @@ import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { useT } from '@/lib/i18n/translate';
 import { QUEST_ICON, questName, tierName } from '@/lib/quests/questLook';
+import { formatWhen } from '@/lib/quests/schedule';
 import { PALETTE } from '@/lib/theme/palette';
 import type { ProofTier, QuestType } from '@/types/gameEvents';
 
-type QuestCardProps = { title: string; questType: QuestType; minutes: number; status: 'open' | 'done'; xp?: number; tier?: ProofTier; onPress?: () => void };
+type QuestCardProps = { title: string; questType: QuestType; minutes: number; status: 'open' | 'done'; xp?: number; tier?: ProofTier; scheduledAt?: number; onPress?: () => void };
 
 /** One quest row: type icon tile, title and meta, then a Start chip (open) or the earned tier and XP (done). */
-export function QuestCard({ title, questType, minutes, status, xp, tier, onPress }: QuestCardProps) {
+export function QuestCard({ title, questType, minutes, status, xp, tier, scheduledAt, onPress }: QuestCardProps) {
   const t = useT();
   const isDone = status === 'done';
   return (
@@ -29,6 +30,7 @@ export function QuestCard({ title, questType, minutes, status, xp, tier, onPress
               </Text>
               <Text className="text-sm text-tara-700">
                 {questName(questType, t)} · {minutes} min
+                {scheduledAt && !isDone ? ` · ${formatWhen(scheduledAt, Date.now(), t)}` : ''}
               </Text>
             </View>
             {isDone ? (

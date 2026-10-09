@@ -6,13 +6,15 @@ import { Button } from '@/components/Button';
 import { Field } from '@/components/Field';
 import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
+import { SchedulePicker } from '@/components/quest/SchedulePicker';
 import { QuestCard } from '@/components/tara/QuestCard';
 import { TaraScreen } from '@/components/tara/TaraScreen';
-import { newEventId } from '@/lib/game/completeQuest';
 import { QUEST_TYPES } from '@/lib/game/constants';
 import { useT } from '@/lib/i18n/translate';
+import { declareQuest } from '@/lib/quests/declareQuest';
 import { PROOF_ICON, proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
 import { classifyQuest, QUEST_INFO } from '@/lib/quests/questTypes';
+import { usualTime } from '@/lib/quests/schedule';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { PALETTE } from '@/lib/theme/palette';
 import type { QuestType } from '@/types/gameEvents';
@@ -28,6 +30,8 @@ export default function Gawain() {
   const [questType, setQuestType] = useState<QuestType>('sariling');
   const [minutes, setMinutes] = useState(QUEST_INFO.sariling.defaultMinutes);
   const [isTouched, setIsTouched] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState<number | undefined>();
+  const events = useGameStore((s) => s.events);
 
   // Ehersisyo unlocks at level 2; locked systems stay hidden until then
   const types = QUEST_TYPES.filter((type) => type !== 'ehersisyo' || state.level.level >= 2);
@@ -41,9 +45,9 @@ export default function Gawain() {
   };
 
   const declare = (startNow: boolean) => {
-    const questId = newEventId('q');
-    append({ id: newEventId('evt'), type: 'quest_declared', at: Date.now(), payload: { quest_id: questId, title: title.trim(), quest_type: questType, planned_minutes: minutes } });
+    const questId = declareQuest(append, { title, quest_type: questType, planned_minutes: minutes, scheduled_at: startNow ? undefined : scheduledAt });
     setTitle('');
+    setScheduledAt(undefined);
     setIsTouched(false);
     if (startNow) router.push(`/quest/${questId}`);
     else router.push('/bahay');
@@ -103,14 +107,19 @@ export default function Gawain() {
         {!MINUTE_CHOICES.includes(minutes) ? <Text className="text-sm text-tara-700">{t(`From your title: ${minutes} min`, `Mula sa pamagat: ${minutes} min`)}</Text> : null}
       </View>
 
+      <View className="gap-2">
+        <Text className="font-pixel text-sm text-tara-700">{t('When? (Tara reminds you)', 'Kailan? (Ipapaalala ni Tara)')}</Text>
+        <SchedulePicker value={scheduledAt} onChange={setScheduledAt} usual={usualTime(events, questType)} />
+      </View>
+
       <View className="gap-3 pt-2">
         <Button label={t('Start now', 'Simulan na')} onPress={() => declare(true)} disabled={!title.trim()} />
-        <Button label={t('Add for later', 'Idagdag para mamaya')} variant="secondary" icon="plus" onPress={() => declare(false)} disabled={!title.trim()} />
+        <Button label={scheduledAt ? t('Schedule it', 'I-schedule') : t('Add for later', 'Idagdag para mamaya')} variant="secondary" icon="plus" onPress={() => declare(false)} disabled={!title.trim()} />
       </View>
 
       {state.openQuests.length > 0 ? <Text className="pt-4 font-pixel-bold text-xl text-ink-900">{t('Planned', 'Naka-plano')}</Text> : null}
       {state.openQuests.map((q) => (
-        <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.planned_minutes} status="open" onPress={() => router.push(`/quest/${q.quest_id}`)} />
+        <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.planned_minutes} scheduledAt={q.scheduled_at} status="open" onPress={() => router.push(`/quest/${q.quest_id}`)} />
       ))}
     </TaraScreen>
   );

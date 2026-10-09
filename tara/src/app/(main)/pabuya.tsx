@@ -10,6 +10,7 @@ import { PolyFrame } from '@/components/poly/PolyFrame';
 import { BlockBar } from '@/components/tara/LevelBar';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
+import { aiReach, useAiStore } from '@/lib/ai/aiSources';
 import { setNanayMode } from '@/lib/alerts/reminders';
 import { newEventId } from '@/lib/game/completeQuest';
 import { buildDemoEvents } from '@/lib/game/demoSeed';
@@ -41,6 +42,7 @@ export default function Pabuya() {
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const isUnlocked = state.level.level >= 2;
+  const reach = aiReach(useAiStore((s) => s.sources));
 
   const add = () => {
     const value = Number(price);
@@ -161,7 +163,7 @@ export default function Pabuya() {
           />
         </View>
         <Pressable onLongPress={loadDemo} delayLongPress={1200}>
-          <Text className="pt-2 text-xs text-tara-500">{t('Tara 0.1.0 · offline · nothing leaves this phone', 'Tara 0.1.0 · offline · walang lumalabas sa phone')}</Text>
+          <Text className="pt-2 text-xs text-tara-500">{reach === 'offline' ? t('Tara 0.1.0 · offline · nothing leaves this phone', 'Tara 0.1.0 · offline · walang lumalabas sa phone') : t(`Tara 0.1.0 · AI runs on ${reach === 'cloud' ? 'the cloud' : 'a laptop'} for some jobs`, `Tara 0.1.0 · may AI na tumatakbo sa ${reach === 'cloud' ? 'cloud' : 'laptop'}`)}</Text>
         </Pressable>
       </Card>
     </TaraScreen>

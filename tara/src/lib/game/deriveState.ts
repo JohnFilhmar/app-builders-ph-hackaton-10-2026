@@ -6,7 +6,7 @@ import { emptyTally, type DayTally } from '@/lib/game/xp';
 import type { AchievementId, BaseAvatar, GameEvent, QuestType } from '@/types/gameEvents';
 
 export type PabuyaItem = { id: string; title: string; price: number; claimed: boolean };
-export type OpenQuest = { quest_id: string; title: string; quest_type: QuestType; planned_minutes: number };
+export type OpenQuest = { quest_id: string; title: string; quest_type: QuestType; planned_minutes: number; scheduled_at?: number };
 export type GameState = {
   todayKey: string;
   totalXp: number;

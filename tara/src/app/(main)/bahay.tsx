@@ -9,7 +9,8 @@ import { PolyFrame } from '@/components/poly/PolyFrame';
 import { SceneBackdrop } from '@/components/scene/SceneBackdrop';
 import { BlockBar } from '@/components/tara/LevelBar';
 import { QuestCard } from '@/components/tara/QuestCard';
-import { TaraBubble } from '@/components/tara/TaraBubble';
+import { TaraChat } from '@/components/tara/TaraChat';
+import { aiReach, useAiStore } from '@/lib/ai/aiSources';
 import { RULES } from '@/lib/game/constants';
 import { newEventId } from '@/lib/game/completeQuest';
 import { useT, type Translate } from '@/lib/i18n/translate';
@@ -42,6 +43,7 @@ export default function Bahay() {
   const events = useGameStore((s) => s.events);
   const append = useGameStore((s) => s.append);
   const heroName = useSetupStore((s) => s.heroName);
+  const reach = aiReach(useAiStore((s) => s.sources));
   const done = useMemo(() => doneQuestsOn(events, state.todayKey), [events, state.todayKey]);
   const xpToday = done.reduce((sum, q) => sum + q.xp, 0);
 
@@ -74,12 +76,15 @@ export default function Bahay() {
                 <Text className="font-pixel-bold text-base text-ink-900">{streak.current}</Text>
               </View>
             </PolyFrame>
-            <PolyFrame cut={6} fill={PALETTE.ink900}>
-              <View className="flex-row items-center gap-1.5 px-2.5 py-1.5">
-                <PixelIcon name="sparkle" size={16} color={PALETTE.sipag400} />
-                <Text className="font-pixel text-sm text-banig-50">Offline AI</Text>
-              </View>
-            </PolyFrame>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('AI settings', 'AI settings')} onPress={() => router.push('/ai-settings')}>
+              <PolyFrame cut={6} fill={PALETTE.ink900}>
+                <View className="min-h-9 flex-row items-center gap-1.5 px-2.5 py-1.5">
+                  <PixelIcon name="sparkle" size={16} color={PALETTE.sipag400} />
+                  <Text className="font-pixel text-sm text-banig-50">{reach === 'cloud' ? 'Cloud AI' : reach === 'lan' ? 'LAN AI' : 'Offline AI'}</Text>
+                  <PixelIcon name="gear" size={16} color={PALETTE.banig50} />
+                </View>
+              </PolyFrame>
+            </Pressable>
           </View>
         </View>
 
@@ -120,7 +125,7 @@ export default function Bahay() {
             </View>
           </PolyFrame>
 
-          <TaraBubble text={line} />
+          <TaraChat greeting={line} />
 
           <View className="flex-row items-center justify-between pt-2">
             <Text className="font-pixel-bold text-xl text-ink-900">{t("Today's quests", 'Gawain ngayong araw')}</Text>
@@ -134,8 +139,8 @@ export default function Bahay() {
               <Text className="font-pixel text-base text-ink-900">{t('Add', 'Dagdag')}</Text>
             </Pressable>
           </View>
-          {state.openQuests.map((q) => (
-            <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.planned_minutes} status="open" onPress={() => router.push(`/quest/${q.quest_id}`)} />
+          {[...state.openQuests].sort((a, b) => (a.scheduled_at ?? 0) - (b.scheduled_at ?? 0)).map((q) => (
+            <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.planned_minutes} scheduledAt={q.scheduled_at} status="open" onPress={() => router.push(`/quest/${q.quest_id}`)} />
           ))}
           {done.map((q) => (
             <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.minutes} status="done" xp={q.xp} tier={q.tier} />

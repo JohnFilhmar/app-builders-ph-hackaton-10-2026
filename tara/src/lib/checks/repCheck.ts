@@ -1,8 +1,8 @@
-import { activeModel } from '@/lib/ai/activeModel';
+import { runAi } from '@/lib/ai/runAi';
 import { countingRuns, numberSequence } from '@/lib/checks/scoring';
 import { tr } from '@/lib/i18n/translate';
-import { runLlamaChat } from '@/lib/runtimes/llamaRuntime';
 import type { CheckOutcome } from '@/types/quest';
+import { parseModelJson } from '@/utils/parseModelJson';
 
 const REPS_SCHEMA = {
   type: 'object',
@@ -28,8 +28,7 @@ export async function checkReps(exercise: string, target: number, transcript: st
   if (runs.length === 0) return { verdict: 'not_confirmed', said: tr("I didn't catch any counting. Try again, a bit louder?", 'Wala akong narinig na bilang. Subukan ulit, mas malakas?'), evidence: { reps: 0, rep_target: target } };
 
   const runText = runs.map((r) => `${r.from} to ${r.to}`).join(', ');
-  const judged = await runLlamaChat(
-    activeModel('brain'),
+  const judged = await runAi('brain',
     [
       {
         role: 'system',
@@ -46,7 +45,7 @@ export async function checkReps(exercise: string, target: number, transcript: st
   let reps = 0;
   let line = '';
   try {
-    const parsed: unknown = JSON.parse(judged.text);
+    const parsed: unknown = parseModelJson(judged.text, 'ehersisyo');
     if (parsed && typeof parsed === 'object' && 'reps' in parsed && typeof parsed.reps === 'number') {
       reps = Math.min(Math.max(0, Math.round(parsed.reps)), seq.length);
       line = 'tara' in parsed && typeof parsed.tara === 'string' ? parsed.tara : '';

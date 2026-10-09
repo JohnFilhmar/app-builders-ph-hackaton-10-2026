@@ -58,7 +58,8 @@
       ],
       "expo-notifications",
       "expo-asset",
-      "llama.rn"
+      "llama.rn",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

@@ -15,12 +15,14 @@ const LINES = [
  * @param isOn whether reminders should be scheduled
  */
 export async function setNanayMode(isOn: boolean): Promise<boolean> {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // only Nanay Mode's own reminders: quest reminders live alongside them
+  await Promise.all(LINES.map((_, i) => Notifications.cancelScheduledNotificationAsync(`nanay_${i}`)));
   if (!isOn) return false;
   const permission = await Notifications.requestPermissionsAsync();
   if (!permission.granted) return false;
-  for (const line of LINES) {
+  for (const [i, line] of LINES.entries()) {
     await Notifications.scheduleNotificationAsync({
+      identifier: `nanay_${i}`,
       content: { title: line.title, body: line.body },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: line.hour, minute: line.minute },
     });

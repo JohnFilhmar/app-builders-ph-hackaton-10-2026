@@ -12,7 +12,14 @@ export const gameEventSchema = z.discriminatedUnion('type', [
   z.object({
     ...meta,
     type: z.literal('quest_declared'),
-    payload: z.object({ quest_id: z.string(), title: z.string(), quest_type: questTypeSchema, planned_minutes: z.number().positive() }),
+    payload: z.object({
+      quest_id: z.string(),
+      title: z.string(),
+      quest_type: questTypeSchema,
+      planned_minutes: z.number().positive(),
+      /** when the user plans to do it; a local notification fires then */
+      scheduled_at: z.number().int().positive().optional(),
+    }),
   }),
   z.object({
     ...meta,

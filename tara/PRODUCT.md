@@ -16,14 +16,14 @@ Tara LEVEL UP! turns a day's chores, study, reading and exercise into quests. Th
 
 ## Positioning
 
-Fully offline, on-device AI proof checks. XP comes from fixed rules, never from AI-assigned points; verification only ratchets XP up and the user can always dispute ("Ginawa ko talaga").
+On-device AI proof checks by default, fully offline. Optional stronger sources per job (text, photos, voice): an Ollama laptop on the same Wi-Fi or an OpenRouter cloud model, chosen in AI settings, with on-device as the fallback. The Home badge always says where the AI runs. XP comes from fixed rules, never from AI-assigned points; verification only ratchets XP up and the user can always dispute ("Ginawa ko talaga").
 
 ## Capabilities and Constraints
 
 - Expo SDK 57, React Native 0.86, NativeWind 4 (Tailwind 3.4), react-native-svg, expo-font, three.js hero via expo-gl.
 - English first, Tagalog toggle; AI output stays English for now.
 - Model names live only in the backend catalog; the app shows tiers.
-- Undecided: chat-to-quest-card flow lands after the demo.
+- Home chat (Plan quests / Ask Tara, typed or hold-to-talk) drafts quest cards the user confirms; scheduled quests fire local reminders.
 
 ## Brand Commitments
 

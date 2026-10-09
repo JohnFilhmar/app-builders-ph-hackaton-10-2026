@@ -1,7 +1,8 @@
 import '@/global.css';
 
 import { PixelifySans_500Medium, PixelifySans_700Bold, useFonts } from '@expo-google-fonts/pixelify-sans';
-import { Stack } from 'expo-router';
+import * as Notifications from 'expo-notifications';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
@@ -19,6 +20,15 @@ export default function RootLayout() {
     const sub = AppState.addEventListener('change', (s) => s === 'active' && refresh());
     return () => sub.remove();
   }, [refresh]);
+
+  // tapping a quest reminder opens that quest
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const questId: unknown = response.notification.request.content.data?.quest_id;
+      if (typeof questId === 'string') router.push(`/quest/${questId}`);
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!hasFonts) return null;
   return (

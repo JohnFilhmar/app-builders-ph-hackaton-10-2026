@@ -15,6 +15,7 @@ import { ResultPanel } from '@/components/quest/ResultPanel';
 import { BlockBar } from '@/components/tara/LevelBar';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
+import { cancelQuestReminder } from '@/lib/alerts/questReminders';
 import { checkBeforeAfter } from '@/lib/checks/beforeAfter';
 import { checkReps } from '@/lib/checks/repCheck';
 import { completeQuest } from '@/lib/game/completeQuest';
@@ -151,6 +152,7 @@ export default function QuestRun() {
     const event = completeQuest(events, { quest_id: questId, quest_type: quest.quest_type, minutes: elapsedMin, tier, disputed, evidence: outcome?.evidence }, Date.now());
     append(event);
     clear(questId);
+    void cancelQuestReminder(questId);
     setIsCommitted(true);
     if (disputed && event.type === 'quest_completed') {
       const banked = event.payload.banked > 0 ? t(` +${event.payload.banked} more lands tomorrow morning.`, ` +${event.payload.banked} pa bukas ng umaga.`) : '';

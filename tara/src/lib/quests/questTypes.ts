@@ -13,7 +13,7 @@ const KEYWORDS: [QuestType, RegExp][] = [
   ['linis', /\b(linis|ayos|ayusin|walis|hugas|laba|kama|kwarto|mesa|clean|tidy|sweep|wash|dishes|bed|room|desk|laundry)\b/i],
   ['aral', /\b(aral|study|review|homework|assignment|notes|exam|quiz|reviewer|lesson|module)\b/i],
   ['basa', /\b(basa|read|reading|libro|book|story|kwento|chapter)\b/i],
-  ['ehersisyo', /\b(ehersisyo|exercise|squat|squats|push ?ups?|sit ?ups?|jog|takbo|run|workout|jumping)\b/i],
+  ['ehersisyo', /\b(ehersisyo|exercise|squat|squats|push ?ups?|sit ?ups?|jog|jogging|takbo|run|running|workout|jumping|gym|swim|basketball|volleyball|zumba|yoga)\b/i],
 ];
 
 /**

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { activeModel } from '@/lib/ai/activeModel';
-import { runLlamaChat } from '@/lib/runtimes/llamaRuntime';
+import { runAi } from '@/lib/ai/runAi';
 import { quizQuestionSchema, type QuizQuestion } from '@/types/quest';
+import { parseModelJson } from '@/utils/parseModelJson';
 
 const noop = () => undefined;
 
@@ -38,8 +38,7 @@ export const MIN_NOTE_WORDS = 12;
  * @param notesUri notes photo (in-app camera)
  */
 export async function readNotes(notesUri: string): Promise<string> {
-  const read = await runLlamaChat(
-    activeModel('eyes'),
+  const read = await runAi('eyes',
     [{ role: 'user', content: 'What text is written on this page? Write out the words exactly, line by line.' }],
     noop,
     notesUri,
@@ -57,8 +56,7 @@ export async function readNotes(notesUri: string): Promise<string> {
  */
 export async function quizFromNotes(notes: string, onQuestion: (written: number) => void): Promise<QuizQuestion[] | null> {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const out = await runLlamaChat(
-      activeModel('brain'),
+    const out = await runAi('brain',
       [
         { role: 'system', content: 'You write short study quizzes. Use only facts from the notes. Keep each question under 15 words and each choice under 6 words. Exactly 3 choices, one correct.' },
         { role: 'user', content: `Notes:
@@ -71,7 +69,7 @@ Write 5 multiple-choice questions about these notes.` },
       { maxTokens: 900, temperature: 0.4, responseFormat: { type: 'json_schema', json_schema: { strict: true, schema: QUIZ_SCHEMA } } },
     );
     try {
-      const parsed = quizSchema.safeParse(JSON.parse(out.text));
+      const parsed = quizSchema.safeParse(parseModelJson(out.text, 'aral'));
       if (parsed.success) return parsed.data.questions;
       console.warn(`[aral] quiz attempt ${attempt + 1} failed validation: ${parsed.error.message.slice(0, 200)}`);
     } catch {
