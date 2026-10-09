@@ -18,12 +18,14 @@ import { TaraScreen } from '@/components/tara/TaraScreen';
 import { cancelQuestReminder } from '@/lib/alerts/questReminders';
 import { checkBeforeAfter } from '@/lib/checks/beforeAfter';
 import { checkReps } from '@/lib/checks/repCheck';
-import { completeQuest } from '@/lib/game/completeQuest';
+import { RULES } from '@/lib/game/constants';
+import { awardFor, completeQuest } from '@/lib/game/completeQuest';
 import { abortPenalty, cancelCosts, isLate } from '@/lib/game/penalty';
 import { abortQuest } from '@/lib/quests/abortQuest';
 import { useT } from '@/lib/i18n/translate';
 import { proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
 import { PASSAGES } from '@/lib/quests/questTypes';
+import { repeatLimitLine } from '@/lib/quests/repeatLimitLine';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { useQuestStore, type QuestWork } from '@/lib/stores/questStore';
 import { PALETTE } from '@/lib/theme/palette';
@@ -60,6 +62,7 @@ export default function QuestRun() {
   const quest = openQuest ?? snapshot.current;
   const events = useGameStore((s) => s.events);
   const multiplier = useGameStore((s) => s.state.streak.multiplier);
+  const todayCount = useGameStore((s) => (openQuest ? s.state.today.countByType[openQuest.quest_type] : 0));
   const append = useGameStore((s) => s.append);
   const work = useQuestStore((s) => s.work[questId ?? ''] ?? NO_WORK);
   const patch = useQuestStore((s) => s.patch);
@@ -83,7 +86,9 @@ export default function QuestRun() {
   const preview = useMemo(() => {
     const tier = tierOf(outcome);
     if (!quest || !tier) return null;
-    return completeQuest(events, { quest_id: quest.quest_id, quest_type: quest.quest_type, minutes: elapsedMin, tier, disputed: false, evidence: outcome?.evidence }, Date.now());
+    const input = { quest_id: quest.quest_id, quest_type: quest.quest_type, minutes: elapsedMin, tier, disputed: false, evidence: outcome?.evidence };
+    const at = Date.now();
+    return { event: completeQuest(events, input, at), capped: awardFor(events, input, at).capped };
   }, [quest, outcome, events, elapsedMin]);
 
   if (!quest || !questId) {
@@ -215,6 +220,7 @@ export default function QuestRun() {
         </Pressable>
       ) : null}
 
+      {phase === 'start' && todayCount >= RULES.repeatLimit ? <TaraBubble text={repeatLimitLine(quest.quest_type, 'before', t)} /> : null}
       {phase === 'start' ? (
         <View className="gap-4">
           {quest.quest_type === 'linis' ? <TaraBubble text={t("Take a Before photo of the spot, then start. You've got this!", "Kunan ng Before photo ang lugar, tapos simulan. Kaya mo 'yan!")} /> : null}
@@ -331,7 +337,9 @@ export default function QuestRun() {
       {phase === 'result' && outcome ? (
         <ResultPanel
           outcome={outcome}
-          xp={preview && preview.type === 'quest_completed' ? preview.payload.xp : null}
+          xp={preview && preview.event.type === 'quest_completed' ? preview.event.payload.xp : null}
+          capped={preview?.capped ?? null}
+          questType={quest.quest_type}
           minutes={Math.min(60, Math.max(10, elapsedMin))}
           multiplier={multiplier}
           beforeUri={work.before_uri}

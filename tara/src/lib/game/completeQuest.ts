@@ -1,6 +1,6 @@
 import { RULES } from '@/lib/game/constants';
 import { deriveState } from '@/lib/game/deriveState';
-import { computeAward } from '@/lib/game/xp';
+import { computeAward, type Award } from '@/lib/game/xp';
 import type { GameEvent, ProofTier, QuestType } from '@/types/gameEvents';
 
 let sequence = 0;
@@ -24,15 +24,14 @@ export type CompletionInput = {
 };
 
 /**
- * Builds the `quest_completed` event, with the award computed against the ledger as it stands now.
- * The XP is stored in the event so later rule changes never rewrite history.
+ * The award a completion would get against the ledger as it stands, including which cap (if any) cut it.
  * @param events ledger before this completion
  * @param input the quest and its proof result
  * @param now completion time
  */
-export function completeQuest(events: GameEvent[], input: CompletionInput, now: number): GameEvent {
+export function awardFor(events: GameEvent[], input: CompletionInput, now: number): Award {
   const state = deriveState(events, now);
-  const award = computeAward({
+  return computeAward({
     questType: input.quest_type,
     minutes: input.minutes,
     tier: input.tier,
@@ -40,6 +39,17 @@ export function completeQuest(events: GameEvent[], input: CompletionInput, now: 
     streakMultiplier: state.streak.multiplier,
     today: state.today,
   });
+}
+
+/**
+ * Builds the `quest_completed` event, with the award computed against the ledger as it stands now.
+ * The XP is stored in the event so later rule changes never rewrite history.
+ * @param events ledger before this completion
+ * @param input the quest and its proof result
+ * @param now completion time
+ */
+export function completeQuest(events: GameEvent[], input: CompletionInput, now: number): GameEvent {
+  const award = awardFor(events, input, now);
   return {
     id: newEventId('evt'),
     type: 'quest_completed',

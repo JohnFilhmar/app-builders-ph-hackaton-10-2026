@@ -6,10 +6,13 @@ import { AvatarStage } from '@/components/avatar/AvatarStage';
 import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { TaraBubble } from '@/components/tara/TaraBubble';
-import { useT } from '@/lib/i18n/translate';
+import { RULES } from '@/lib/game/constants';
+import type { Award } from '@/lib/game/xp';
+import { useT, type Translate } from '@/lib/i18n/translate';
 import { tierName } from '@/lib/quests/questLook';
+import { repeatLimitLine } from '@/lib/quests/repeatLimitLine';
 import { PALETTE } from '@/lib/theme/palette';
-import type { ProofTier } from '@/types/gameEvents';
+import type { ProofTier, QuestType } from '@/types/gameEvents';
 import type { CheckOutcome } from '@/types/quest';
 
 // one color per tier, so the stamp alone says how strong the proof was
@@ -23,6 +26,9 @@ type ResultPanelProps = {
   outcome: CheckOutcome;
   /** XP this result would earn, already capped; null while not confirmed */
   xp: number | null;
+  /** which daily limit cut the XP, so the panel can say why */
+  capped: Award['capped'];
+  questType: QuestType;
   minutes: number;
   multiplier: number;
   beforeUri?: string;
@@ -34,12 +40,20 @@ type ResultPanelProps = {
   onDispute: () => void;
 };
 
+// says which limit applied; the quest always still counts as done
+const capLine = (capped: NonNullable<Award['capped']>, questType: QuestType, t: Translate): string =>
+  ({
+    repeat_limit: repeatLimitLine(questType, 'after', t),
+    daily_cap: t(`You reached today's ${RULES.dailyQuestCap} Sipag limit. This one still counts as done. Come back tomorrow!`, `Naabot mo na ang ${RULES.dailyQuestCap} Sipag ngayong araw. Bilang pa rin itong tapos. Balik bukas!`),
+    sabi_ko_cap: t(`Today's ${RULES.sabiKoDailyCap} Sipag for "Sabi ko" proof is used up. A photo or quiz proof still earns more.`, `Naubos na ang ${RULES.sabiKoDailyCap} Sipag ngayon para sa "Sabi ko". May dagdag pa rin sa litrato o quiz.`),
+  })[capped];
+
 /**
  * The payoff. A confirmed quest shows the hero jumping on the quest-done burst, then the stamp drops, then the XP
  * math. A not-confirmed check shows what Tara saw and offers a retry and "I really did it" side by side, never a
  * warning.
  */
-export function ResultPanel({ outcome, xp, minutes, multiplier, beforeUri, afterUri, canRetry, retryLabel, onAccept, onRetry, onDispute }: ResultPanelProps) {
+export function ResultPanel({ outcome, xp, capped, questType, minutes, multiplier, beforeUri, afterUri, canRetry, retryLabel, onAccept, onRetry, onDispute }: ResultPanelProps) {
   const t = useT();
   const drop = useRef(new Animated.Value(0)).current;
   const tier = outcome.verdict === 'patunay' || outcome.verdict === 'nakita' || outcome.verdict === 'sabi_ko' ? outcome.verdict : null;
@@ -95,7 +109,7 @@ export function ResultPanel({ outcome, xp, minutes, multiplier, beforeUri, after
           <Text className="font-pixel text-sm text-tara-700">
             {minutes} min × {look.times} × {multiplier} streak
           </Text>
-          {xp === 0 ? <Text className="text-center text-sm text-tara-700">{t("Today's limit for this proof is used up. It still counts as done.", 'Naubos na ang limit ngayon para sa patunay na ito. Bilang pa rin itong tapos.')}</Text> : null}
+          {capped ? <Text className="text-center text-sm text-tara-700">{capLine(capped, questType, t)}</Text> : null}
         </View>
       ) : null}
       {photos}
