@@ -27,7 +27,7 @@ async function takePhoto(): Promise<string | null> {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) return null;
   // camera only: proof photos never come from the gallery
-  const shot = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6 });
+  const shot = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.6, cameraType: ImagePicker.CameraType.back });
   return shot.canceled ? null : (shot.assets[0]?.uri ?? null);
 }
 
