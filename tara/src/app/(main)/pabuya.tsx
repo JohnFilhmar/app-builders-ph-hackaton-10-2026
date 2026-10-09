@@ -8,6 +8,7 @@ import { Segmented } from '@/components/Segmented';
 import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { BlockBar } from '@/components/tara/LevelBar';
+import { ItemShop } from '@/components/rewards/ItemShop';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
 import { aiReach, useAiStore } from '@/lib/ai/aiSources';
@@ -65,17 +66,24 @@ export default function Pabuya() {
     ]);
 
   return (
-    <TaraScreen title={t('Rewards', 'Pabuya')} subtitle={t('Real treats you set yourself, paid in Sipag.', 'Totoong premyo na ikaw ang nagtakda, bayad sa Sipag.')}>
+    <TaraScreen title={t('Rewards', 'Pabuya')} subtitle={t('Spend Sipag on shop items and treats you set yourself.', 'Gastusin ang Sipag sa tindahan at sa sariling premyo.')}>
       <PolyFrame cut={14} fill={PALETTE.ink900} depth={5} depthColor={PALETTE.tara700}>
         <View className="flex-row items-center gap-3 p-4">
           <PixelIcon name="chest" size={36} color={PALETTE.sipag400} />
           <View className="flex-1">
-            <Text className="font-pixel text-sm text-sipag-300">{t('Reward balance', 'Pabuya balance')}</Text>
-            <Text className="font-pixel-bold text-3xl text-banig-50">{state.pabuyaBalance} Sipag</Text>
+            <Text className="font-pixel text-sm text-sipag-300">{t('Sipag to spend', 'Sipag na magagastos')}</Text>
+            <Text className="text-banig-50">
+              <Text className="font-num text-4xl">{state.pabuyaBalance}</Text>
+              <Text className="font-pixel text-lg text-sipag-300"> Sipag</Text>
+            </Text>
           </View>
         </View>
       </PolyFrame>
 
+      <Text className="pt-2 font-pixel-bold text-xl text-ink-900">{t('Item shop', 'Tindahan')}</Text>
+      <ItemShop />
+
+      <Text className="pt-2 font-pixel-bold text-xl text-ink-900">{t('Your own treats', 'Sariling premyo')}</Text>
       {!isUnlocked ? (
         <TaraBubble text={t('Rewards open at Level 2. Almost there!', 'Bubukas ang Pabuya sa Level 2. Malapit na!')} />
       ) : (
@@ -84,7 +92,7 @@ export default function Pabuya() {
           {state.pabuya.map((item) => {
             const canClaim = !item.claimed && state.pabuyaBalance >= item.price;
             return (
-              <PolyFrame key={item.id} cut={12} fill={item.claimed ? PALETTE.leaf100 : PALETTE.white} stroke={canClaim ? PALETTE.sipag500 : PALETTE.banig300} strokeWidth={canClaim ? 2.5 : 1.5}>
+              <PolyFrame key={item.id} cut={12} fill={item.claimed ? PALETTE.leaf100 : PALETTE.white} stroke={canClaim ? PALETTE.sipag500 : PALETTE.banig300} strokeWidth={canClaim ? 3.5 : 2.5}>
                 <View className="gap-2 p-3.5">
                   <View className="flex-row items-center justify-between gap-2">
                     <View className="flex-1">

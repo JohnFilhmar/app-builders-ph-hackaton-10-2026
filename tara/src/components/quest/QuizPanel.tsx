@@ -46,7 +46,7 @@ export function QuizPanel({ quiz, onFinish }: QuizPanelProps) {
         const isWrongPick = isShown && i === picked && i !== q.answer;
         return (
           <Pressable key={`${index}-${i}`} accessibilityRole="button" onPress={() => pick(i)}>
-            <PolyFrame cut={10} fill={isRight ? PALETTE.leaf100 : isWrongPick ? PALETTE.banig200 : PALETTE.white} stroke={isRight ? PALETTE.leaf500 : PALETTE.banig300} strokeWidth={isRight ? 2.5 : 1.5}>
+            <PolyFrame cut={10} fill={isRight ? PALETTE.leaf100 : isWrongPick ? PALETTE.banig200 : PALETTE.white} stroke={isRight ? PALETTE.leaf500 : PALETTE.banig300} strokeWidth={isRight ? 3.5 : 2.5}>
               <View className="min-h-14 flex-row items-center gap-3 px-4 py-3">
                 <Text className="font-pixel-bold text-base text-tara-500">{'ABC'[i]}</Text>
                 <Text className="flex-1 text-base text-ink-900">{choice}</Text>

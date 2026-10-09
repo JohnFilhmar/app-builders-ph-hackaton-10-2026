@@ -88,7 +88,10 @@ export function ResultPanel({ outcome, xp, minutes, multiplier, beforeUri, after
       </Animated.View>
       {xp !== null ? (
         <View className="items-center gap-1">
-          <Text className="font-pixel-bold text-4xl text-sipag-600">+{xp} Sipag</Text>
+          <Text className="text-sipag-600">
+            <Text className="font-num text-4xl">+{xp}</Text>
+            <Text className="font-pixel-bold text-xl"> Sipag</Text>
+          </Text>
           <Text className="font-pixel text-sm text-tara-700">
             {minutes} min × {look.times} × {multiplier} streak
           </Text>

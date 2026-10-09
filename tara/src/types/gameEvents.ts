@@ -38,6 +38,13 @@ export const gameEventSchema = z.discriminatedUnion('type', [
   z.object({ ...meta, type: z.literal('comeback_awarded'), payload: z.object({ xp: z.number().int().nonnegative() }) }),
   z.object({ ...meta, type: z.literal('pabuya_created'), payload: z.object({ pabuya_id: z.string(), title: z.string(), price: z.number().int().positive() }) }),
   z.object({ ...meta, type: z.literal('pabuya_claimed'), payload: z.object({ pabuya_id: z.string() }) }),
+  z.object({
+    ...meta,
+    type: z.literal('quest_aborted'),
+    /** cancelled by the user, or expired after sitting undone too long; the penalty is already clamped to the level floor */
+    payload: z.object({ quest_id: z.string(), reason: z.enum(['cancelled', 'expired']), penalty: z.number().int().nonnegative() }),
+  }),
+  z.object({ ...meta, type: z.literal('item_bought'), payload: z.object({ item_id: z.string(), price: z.number().int().positive() }) }),
   z.object({ ...meta, type: z.literal('app_opened'), payload: z.object({}) }),
 ]);
 

@@ -39,7 +39,7 @@ export default function AiSettings() {
       />
       <SourceCard capability="brain" title={t('Text: plans, quizzes, chat', 'Text: plano, quiz, chat')} needs="text" allowLan />
       <SourceCard capability="eyes" title={t('Photos: Before & After, notes', 'Litrato: Before & After, notes')} needs="image" allowLan />
-      <SourceCard capability="ears" title={t('Voice: reading and counting', 'Boses: pagbasa at pagbilang')} needs="audio" allowLan={false} />
+      <SourceCard capability="ears" title={t('Voice: reading and counting', 'Boses: pagbasa at pagbilang')} needs="audio" allowLan />
       <Card title={t('OpenRouter key', 'OpenRouter key')}>
         <Text className="text-sm text-tara-700">
           {hasKey ? t('A key is saved in secure storage.', 'May naka-save na key sa secure storage.') : t('No key yet. Get one at openrouter.ai/keys.', 'Wala pang key. Kumuha sa openrouter.ai/keys.')}

@@ -33,10 +33,10 @@ export const useAiStore = create<AiStore>()(
 );
 
 /** "192.168.1.5" or "http://192.168.1.5:11434/" -> "http://192.168.1.5:11434" (Ollama's default port when none is given). */
-export function normalizeServer(input: string): string {
+export function normalizeServer(input: string, defaultPort = 11434): string {
   let url = input.trim().replace(/\/+$/, '');
   if (!/^https?:\/\//.test(url)) url = `http://${url}`;
-  if (!/:\d+$/.test(url.replace(/^https?:\/\//, ''))) url = `${url}:11434`;
+  if (!/:\d+$/.test(url.replace(/^https?:\/\//, ''))) url = `${url}:${defaultPort}`;
   return url;
 }
 

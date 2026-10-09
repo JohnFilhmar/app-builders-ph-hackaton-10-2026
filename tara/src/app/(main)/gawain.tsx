@@ -99,7 +99,7 @@ export default function Gawain() {
           {MINUTE_CHOICES.map((m) => (
             <Pressable key={m} accessibilityRole="radio" accessibilityState={{ checked: minutes === m }} onPress={() => setMinutes(m)} className="flex-1">
               <PolyFrame cut={7} fill={minutes === m ? PALETTE.sipag400 : PALETTE.white} stroke={minutes === m ? PALETTE.sipag600 : PALETTE.banig300}>
-                <Text className="py-3 text-center font-pixel-bold text-base text-ink-900">{m}m</Text>
+                <Text className="py-3 text-center font-num text-base text-ink-900">{m} min</Text>
               </PolyFrame>
             </Pressable>
           ))}

@@ -1,3 +1,4 @@
+import { RULES } from '@/lib/game/constants';
 import { deriveState } from '@/lib/game/deriveState';
 import { computeAward } from '@/lib/game/xp';
 import type { GameEvent, ProofTier, QuestType } from '@/types/gameEvents';
@@ -18,6 +19,8 @@ export type CompletionInput = {
   disputed: boolean;
   /** scores only, never media: quiz_correct, quiz_total, read_seconds, offline (1 or 0) */
   evidence?: Record<string, number>;
+  /** finished after its scheduled time plus grace: earns RULES.lateFactor of the XP */
+  late?: boolean;
 };
 
 /**
@@ -47,7 +50,7 @@ export function completeQuest(events: GameEvent[], input: CompletionInput, now: 
       minutes: input.minutes,
       tier: award.tier,
       disputed: input.disputed,
-      xp: award.xp,
+      xp: input.late ? Math.round(award.xp * RULES.lateFactor) : award.xp,
       banked: award.banked,
       evidence: input.evidence ?? {},
     },

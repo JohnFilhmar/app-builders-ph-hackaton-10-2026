@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Alert, Image, Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Segmented } from '@/components/Segmented';
@@ -19,6 +19,8 @@ import { cancelQuestReminder } from '@/lib/alerts/questReminders';
 import { checkBeforeAfter } from '@/lib/checks/beforeAfter';
 import { checkReps } from '@/lib/checks/repCheck';
 import { completeQuest } from '@/lib/game/completeQuest';
+import { abortPenalty, cancelCosts, isLate } from '@/lib/game/penalty';
+import { abortQuest } from '@/lib/quests/abortQuest';
 import { useT } from '@/lib/i18n/translate';
 import { proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
 import { PASSAGES } from '@/lib/quests/questTypes';
@@ -149,7 +151,11 @@ export default function QuestRun() {
   const commit = (disputed: boolean) => {
     if (isCommitted) return;
     const tier = tierOf(outcome) ?? 'patunay';
-    const event = completeQuest(events, { quest_id: questId, quest_type: quest.quest_type, minutes: elapsedMin, tier, disputed, evidence: outcome?.evidence }, Date.now());
+    const event = completeQuest(
+      events,
+      { quest_id: questId, quest_type: quest.quest_type, minutes: elapsedMin, tier, disputed, evidence: outcome?.evidence, late: isLate(quest, Date.now()) },
+      Date.now(),
+    );
     append(event);
     clear(questId);
     void cancelQuestReminder(questId);
@@ -158,6 +164,27 @@ export default function QuestRun() {
       const banked = event.payload.banked > 0 ? t(` +${event.payload.banked} more lands tomorrow morning.`, ` +${event.payload.banked} pa bukas ng umaga.`) : '';
       setOutcome({ verdict: 'sabi_ko', said: t(`I believe you. +${event.payload.xp} Sipag.${banked}`, `Naniniwala ako sa'yo. +${event.payload.xp} Sipag.${banked}`), evidence: {} });
     } else router.replace('/bahay');
+  };
+
+  const cancel = () => {
+    const penalty = cancelCosts(quest, Date.now()) ? abortPenalty(useGameStore.getState().state, 'cancelled') : 0;
+    Alert.alert(
+      t('Cancel this quest?', 'Kanselahin ang Gawain?'),
+      penalty > 0
+        ? t(`You will lose ${penalty} Sipag. Quests left undone for 6 hours expire on their own and cost more.`, `Mababawasan ka ng ${penalty} Sipag. Ang Gawain na hindi natapos sa loob ng 6 na oras ay kusang mag-e-expire at mas malaki ang bawas.`)
+        : t('No Sipag is lost this time.', 'Walang mababawas na Sipag ngayon.'),
+      [
+        { text: t('Keep it', 'Ituloy'), style: 'cancel' },
+        {
+          text: t('Cancel quest', 'Kanselahin'),
+          style: 'destructive',
+          onPress: () => {
+            abortQuest(quest, 'cancelled');
+            router.replace('/bahay');
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -181,6 +208,11 @@ export default function QuestRun() {
             </View>
           </View>
         </PolyFrame>
+      ) : null}
+      {phase === 'start' || phase === 'running' ? (
+        <Pressable accessibilityRole="button" onPress={cancel} className="-mt-2 h-11 items-end justify-center">
+          <Text className="font-pixel text-sm text-tara-500">{t('Cancel quest', 'Kanselahin ang Gawain')}</Text>
+        </Pressable>
       ) : null}
 
       {phase === 'start' ? (
@@ -224,7 +256,7 @@ export default function QuestRun() {
           <PolyFrame cut={18} fill={PALETTE.ink900} depth={5} depthColor={PALETTE.tara700}>
             <View className="items-center gap-3 px-5 py-7">
               <PixelIcon name="clock" size={24} color={PALETTE.sipag400} />
-              <Text className="font-pixel-bold text-6xl text-banig-50">
+              <Text className="font-num text-6xl text-banig-50">
                 {pad(Math.floor(elapsedMs / 60_000))}:{pad(Math.floor((elapsedMs / 1000) % 60))}
               </Text>
               <Text className="font-pixel text-base text-sipag-300">{t(`of ${quest.planned_minutes} minutes`, `sa ${quest.planned_minutes} minuto`)}</Text>

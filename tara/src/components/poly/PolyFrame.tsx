@@ -31,7 +31,7 @@ export function chamferPoints(width: number, height: number, cut: number, inset 
  * A chamfered polygon surface drawn in SVG behind its children. The base for cards, buttons, chips and badges, so
  * the whole app shares one faceted silhouette.
  */
-export function PolyFrame({ children, cut = 10, fill, stroke, strokeWidth = 1.5, depth = 0, depthColor, className = '' }: PolyFrameProps) {
+export function PolyFrame({ children, cut = 10, fill, stroke, strokeWidth = 2.5, depth = 0, depthColor, className = '' }: PolyFrameProps) {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;

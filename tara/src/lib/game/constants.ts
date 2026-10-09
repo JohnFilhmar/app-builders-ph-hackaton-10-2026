@@ -23,4 +23,12 @@ export const RULES = {
   baonLevel: 3,
   baonEveryDays: 7,
   baonMax: 2,
+  /** Sipag lost when cancelling an unscheduled or overdue quest */
+  cancelPenalty: 5,
+  /** Sipag lost when a quest sits undone past overdueHours and expires */
+  expiredPenalty: 10,
+  overdueHours: 6,
+  /** a scheduled quest finished later than its time plus its minutes plus this grace earns lateFactor of its XP */
+  lateGraceMinutes: 30,
+  lateFactor: 0.75,
 } as const;

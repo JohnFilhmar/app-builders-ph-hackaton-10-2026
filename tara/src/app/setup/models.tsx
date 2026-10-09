@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -20,6 +21,7 @@ import { PALETTE } from '@/lib/theme/palette';
 import { taraCatalogSchema, type Tier } from '@/types/catalog';
 import { errorMessage } from '@/utils/errorMessage';
 
+const KEEP_AWAKE_TAG = 'model-download';
 const ramGb = Device.totalMemory ? Device.totalMemory / 1024 ** 3 : 0;
 const sizeMb = (tier: Tier) => Math.round(tier.files.reduce((n, f) => n + f.size_bytes, 0) / 1e6);
 const fits = (tier: Tier) => ramGb === 0 || ramGb + 0.5 >= tier.min_ram_gb;
@@ -29,7 +31,7 @@ function TierRow({ tier, isChosen, onChoose }: { tier: Tier; isChosen: boolean; 
   const isLocked = !fits(tier);
   return (
     <Pressable accessibilityRole="radio" accessibilityState={{ checked: isChosen, disabled: isLocked }} disabled={isLocked} onPress={onChoose}>
-      <PolyFrame cut={10} fill={isChosen ? '#FFF4D1' : PALETTE.white} stroke={isChosen ? PALETTE.sipag500 : PALETTE.banig300} strokeWidth={isChosen ? 2.5 : 1.5}>
+      <PolyFrame cut={10} fill={isChosen ? '#FFF4D1' : PALETTE.white} stroke={isChosen ? PALETTE.sipag500 : PALETTE.banig300} strokeWidth={isChosen ? 3.5 : 2.5}>
         <View className="gap-1 p-3.5">
           <View className="flex-row items-center justify-between gap-2">
             <View className="flex-1 flex-row items-center gap-2">
@@ -109,6 +111,8 @@ export default function SetupModels() {
 
   const downloadAll = async () => {
     setIsDownloading(true);
+    // the phone sleeping mid-download killed the transfer and restarted it, so the screen stays on until it finishes
+    await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
     try {
       for (const [i, tier] of chosen.entries()) {
         if (await isModelOnDisk(tier)) continue;
@@ -123,6 +127,7 @@ export default function SetupModels() {
     } catch (err) {
       setProgress(t(`Download stopped: ${errorMessage(err)}. Tap again to resume.`, `Huminto ang download: ${errorMessage(err)}. I-tap ulit para ituloy.`));
     }
+    deactivateKeepAwake(KEEP_AWAKE_TAG);
     setIsDownloading(false);
   };
 

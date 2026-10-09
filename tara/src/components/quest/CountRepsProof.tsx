@@ -19,7 +19,7 @@ export function CountRepsProof({ target, onCounted }: CountRepsProofProps) {
   return (
     <View className="gap-4">
       <View className="items-center gap-1">
-        <Text className="font-pixel-bold text-5xl text-ink-900">{target}</Text>
+        <Text className="font-num text-5xl text-ink-900">{target}</Text>
         <Text className="font-pixel text-base text-tara-700">{t('reps to go', 'reps ang target')}</Text>
       </View>
       <Text className="text-center text-base text-tara-700">

@@ -15,6 +15,8 @@ module.exports = {
         // Android cannot synthesize weights for a custom face, so each weight is its own family
         pixel: ['PixelifySans_500Medium'],
         'pixel-bold': ['PixelifySans_700Bold'],
+        // pixel digits blur 5 into S; numbers use a crisp monospace so values read at a glance
+        num: ['SpaceMono_700Bold'],
       },
     },
   },

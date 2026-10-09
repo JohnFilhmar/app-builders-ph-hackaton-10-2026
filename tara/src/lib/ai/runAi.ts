@@ -2,7 +2,7 @@ import type { CompletionResponseFormat } from 'llama.rn';
 
 import { activeModel } from '@/lib/ai/activeModel';
 import { useAiStore } from '@/lib/ai/aiSources';
-import { remoteChat } from '@/lib/ai/remoteChat';
+import { remoteChat, remoteTranscribe } from '@/lib/ai/remoteChat';
 import { runLlamaChat } from '@/lib/runtimes/llamaRuntime';
 import { transcribeWav } from '@/lib/runtimes/whisperRuntime';
 import type { ChatMessage, Lang } from '@/types/chat';
@@ -40,14 +40,21 @@ export async function runAi(
 }
 
 /**
- * Speech to text on the chosen "ears" source: on-device Whisper, or an audio-capable OpenRouter model. Ollama has no
- * speech-to-text, so a LAN choice is never offered for ears. Falls back to the phone on a remote failure.
+ * Speech to text on the chosen "ears" source: on-device Whisper, a laptop Whisper server, or an audio-capable OpenRouter
+ * model. Falls back to the phone on a remote failure.
  * @param wavPath 16 kHz mono WAV slice
  * @param lang language hint
  * @param prompt vocabulary hint, e.g. counting words
  */
 export async function transcribe(wavPath: string, lang: Lang | 'auto', prompt?: string): Promise<{ text: string }> {
   const source = useAiStore.getState().sources.ears;
+  if (source.kind === 'lan') {
+    try {
+      return { text: (await remoteTranscribe(source, wavPath, lang, prompt)).trim() };
+    } catch (err) {
+      console.warn(`[ai] ears on lan failed, using the phone: ${errorMessage(err)}`);
+    }
+  }
   if (source.kind === 'cloud') {
     try {
       const hint = lang === 'tl' ? ' It is in Tagalog or Taglish.' : lang === 'en' ? ' It is in English.' : '';

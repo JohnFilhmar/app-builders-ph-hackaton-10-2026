@@ -21,7 +21,7 @@ type Step = 'welcome' | 'name' | 'hero';
 function Choice({ label, isPicked, onPress }: { label: string; isPicked: boolean; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="radio" accessibilityState={{ checked: isPicked }} onPress={onPress} className="flex-1">
-      <PolyFrame cut={10} fill={isPicked ? PALETTE.sipag400 : PALETTE.white} stroke={isPicked ? PALETTE.sipag600 : PALETTE.banig300} strokeWidth={isPicked ? 2.5 : 1.5}>
+      <PolyFrame cut={10} fill={isPicked ? PALETTE.sipag400 : PALETTE.white} stroke={isPicked ? PALETTE.sipag600 : PALETTE.banig300} strokeWidth={isPicked ? 3.5 : 2.5}>
         <Text className="py-4 text-center font-pixel-bold text-lg text-ink-900">{label}</Text>
       </PolyFrame>
     </Pressable>

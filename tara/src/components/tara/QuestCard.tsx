@@ -36,7 +36,7 @@ export function QuestCard({ title, questType, minutes, status, xp, tier, schedul
             {isDone ? (
               <View className="items-end">
                 <Text className="font-pixel text-xs text-leaf-700">{tier ? tierName(tier, t).toUpperCase() : ''}</Text>
-                <Text className="font-pixel-bold text-xl text-leaf-700">+{xp ?? 0}</Text>
+                <Text className="font-num text-xl text-leaf-700">+{xp ?? 0}</Text>
               </View>
             ) : (
               <PolyFrame cut={6} fill={PALETTE.ink900}>

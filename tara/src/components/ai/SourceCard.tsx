@@ -49,14 +49,16 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
   const [isBusy, setIsBusy] = useState(false);
 
   const model = source.kind === 'device' ? '' : source.model;
-  const remote = (m: string): RemoteSource => (source.kind === 'cloud' ? { kind: 'cloud', model: m } : { kind: 'lan', base_url: normalizeServer(server), model: m });
+  // a Whisper server usually listens on 8080; Ollama on 11434
+  const port = needs === 'audio' ? 8080 : 11434;
+  const remote = (m: string): RemoteSource => (source.kind === 'cloud' ? { kind: 'cloud', model: m } : { kind: 'lan', base_url: normalizeServer(server, port), model: m });
 
   const pickKind = (kind: AiSource['kind']) => {
     setModels([]);
     setStatus(null);
     if (kind === 'device') setSource(capability, { kind: 'device' });
     else if (kind === 'cloud') setSource(capability, { kind: 'cloud', model: '' });
-    else setSource(capability, { kind: 'lan', base_url: normalizeServer(server || '192.168.1.2'), model: '' });
+    else setSource(capability, { kind: 'lan', base_url: normalizeServer(server || '192.168.1.2', port), model: needs === 'audio' ? 'whisper-1' : '' });
   };
 
   const run = async (job: () => Promise<string>) => {
@@ -72,7 +74,7 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
 
   const findModels = () =>
     run(async () => {
-      if (source.kind === 'lan') rememberServer(normalizeServer(server));
+      if (source.kind === 'lan') rememberServer(normalizeServer(server, port));
       const found = await listModels(remote(model), needs);
       setModels(found);
       return found.length ? t(`${found.length} models found`, `${found.length} na model ang nakita`) : t('No models found', 'Walang nakitang model');
@@ -80,6 +82,12 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
 
   const test = () =>
     run(async () => {
+      if (needs === 'audio' && source.kind === 'lan') {
+        // a voice server cannot answer a chat prompt; reaching it is the test
+        const res = await fetch(`${normalizeServer(server, port)}/v1/models`, { signal: AbortSignal.timeout(6000) }).catch(() => null);
+        if (!res) throw new Error(t('Cannot reach the voice server', 'Hindi maabot ang voice server'));
+        return t('Voice server reachable', 'Naaabot ang voice server');
+      }
       const started = Date.now();
       const reply = await remoteChat(remote(model), [{ role: 'user', content: 'Reply with only the word OK.' }], { maxTokens: 5, temperature: 0 });
       return t(`Works: "${reply.trim().slice(0, 20)}" in ${Date.now() - started} ms`, `Gumagana: "${reply.trim().slice(0, 20)}" sa ${Date.now() - started} ms`);
@@ -101,13 +109,28 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
       {source.kind === 'lan' ? (
         <>
           <Text className="text-sm text-tara-700">
-            {t('A laptop on the same Wi-Fi running Ollama. Start it with OLLAMA_HOST=0.0.0.0 so the phone can reach it.', 'Laptop sa parehong Wi-Fi na may Ollama. Patakbuhin gamit ang OLLAMA_HOST=0.0.0.0 para maabot ng phone.')}
+            {needs === 'audio'
+              ? t(
+                  'A laptop on the same Wi-Fi running a Whisper server with /v1/audio/transcriptions, e.g. whisper.cpp server on port 8080 started with --host 0.0.0.0 --inference-path /v1/audio/transcriptions.',
+                  'Laptop sa parehong Wi-Fi na may Whisper server (/v1/audio/transcriptions), hal. whisper.cpp server sa port 8080 na may --host 0.0.0.0 --inference-path /v1/audio/transcriptions.',
+                )
+              : t(
+                  'A laptop on the same Wi-Fi running Ollama. Start it with OLLAMA_HOST=0.0.0.0 so the phone can reach it.',
+                  'Laptop sa parehong Wi-Fi na may Ollama. Patakbuhin gamit ang OLLAMA_HOST=0.0.0.0 para maabot ng phone.',
+                )}
           </Text>
-          <Field label={t('Laptop address', 'Address ng laptop')} value={server} onChangeText={setServer} placeholder="192.168.1.5:11434" autoCapitalize="none" keyboardType="url" />
+          <Field
+            label={t('Laptop address', 'Address ng laptop')}
+            value={server}
+            onChangeText={setServer}
+            placeholder={needs === 'audio' ? '192.168.1.5:8080' : '192.168.1.5:11434'}
+            autoCapitalize="none"
+            keyboardType="url"
+          />
           {servers.length > 0 ? (
             <View className="flex-row flex-wrap gap-2">
               {servers.map((s) => (
-                <ModelChip key={s} name={s.replace(/^https?:\/\//, '')} isPicked={normalizeServer(server) === s} onPress={() => setServer(s)} />
+                <ModelChip key={s} name={s.replace(/^https?:\/\//, '')} isPicked={normalizeServer(server, port) === s} onPress={() => setServer(s)} />
               ))}
             </View>
           ) : null}
@@ -129,7 +152,7 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
               ))}
             </View>
           ) : null}
-          <Field label={t('Model', 'Model')} value={model} onChangeText={(m) => setSource(capability, remote(m.trim()))} placeholder={source.kind === 'lan' ? 'gemma3:4b' : 'google/gemini-2.5-flash'} autoCapitalize="none" />
+          <Field label={t('Model', 'Model')} value={model} onChangeText={(m) => setSource(capability, remote(m.trim()))} placeholder={source.kind === 'lan' ? (needs === 'audio' ? 'whisper-1' : 'gemma3:4b') : 'google/gemini-2.5-flash'} autoCapitalize="none" />
           <Button label={t('Test', 'Subukan')} variant="secondary" icon={null} isBusy={isBusy} disabled={!model} onPress={() => void test()} />
         </>
       ) : null}

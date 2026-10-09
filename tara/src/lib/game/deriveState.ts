@@ -6,7 +6,7 @@ import { emptyTally, type DayTally } from '@/lib/game/xp';
 import type { AchievementId, BaseAvatar, GameEvent, QuestType } from '@/types/gameEvents';
 
 export type PabuyaItem = { id: string; title: string; price: number; claimed: boolean };
-export type OpenQuest = { quest_id: string; title: string; quest_type: QuestType; planned_minutes: number; scheduled_at?: number };
+export type OpenQuest = { quest_id: string; title: string; quest_type: QuestType; planned_minutes: number; scheduled_at?: number; declared_at: number };
 export type GameState = {
   todayKey: string;
   totalXp: number;
@@ -20,6 +20,8 @@ export type GameState = {
   pabuya: PabuyaItem[];
   baseAvatar: BaseAvatar | null;
   openQuests: OpenQuest[];
+  /** shop items bought with Sipag */
+  ownedItems: string[];
 };
 
 const sumXp = (byDay: Map<string, number>, include: (day: string) => boolean): number =>
@@ -42,6 +44,7 @@ export function deriveState(events: GameEvent[], now: number): GameState {
   const pabuya = new Map<string, PabuyaItem>();
   const open = new Map<string, OpenQuest>();
   const achieved = new Set<AchievementId>();
+  const owned = new Set<string>();
   let baseAvatar: BaseAvatar | null = null;
   let spent = 0;
   let linisPatunay = 0;
@@ -55,7 +58,7 @@ export function deriveState(events: GameEvent[], now: number): GameState {
         baseAvatar = e.payload.base_avatar;
         break;
       case 'quest_declared':
-        open.set(e.payload.quest_id, { ...e.payload });
+        open.set(e.payload.quest_id, { ...e.payload, declared_at: e.at });
         break;
       case 'quest_completed': {
         const p = e.payload;
@@ -99,6 +102,15 @@ export function deriveState(events: GameEvent[], now: number): GameState {
         }
         break;
       }
+      case 'quest_aborted':
+        if (open.delete(e.payload.quest_id)) addXp(dayKey(e.at), -e.payload.penalty);
+        break;
+      case 'item_bought':
+        if (!owned.has(e.payload.item_id)) {
+          owned.add(e.payload.item_id);
+          spent += e.payload.price;
+        }
+        break;
       case 'app_opened':
         break;
     }
@@ -127,5 +139,6 @@ export function deriveState(events: GameEvent[], now: number): GameState {
     pabuya: [...pabuya.values()],
     baseAvatar,
     openQuests: [...open.values()],
+    ownedItems: [...owned],
   };
 }

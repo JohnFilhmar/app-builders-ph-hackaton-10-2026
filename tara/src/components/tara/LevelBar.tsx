@@ -30,10 +30,12 @@ export function LevelBar({ state, tone = 'paper' }: LevelBarProps) {
       <View className="gap-2 p-3.5">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-baseline gap-2">
-            <Text className="font-pixel-bold text-2xl text-ink-900">Lv. {level.level}</Text>
+            <Text className="font-pixel-bold text-2xl text-ink-900">
+              Lv. <Text className="font-num">{level.level}</Text>
+            </Text>
             <Text className="font-pixel text-base text-tara-700">{level.name}</Text>
           </View>
-          <Text className="font-pixel text-sm text-tara-700">
+          <Text className="font-num text-sm text-tara-700">
             {totalXp}
             {level.nextXp !== null ? ` / ${level.nextXp}` : ''} Sipag
           </Text>

@@ -62,12 +62,42 @@ export async function remoteChat(source: RemoteSource, messages: ChatMessage[], 
 }
 
 /**
+ * Speech to text on a laptop Whisper server through the OpenAI-style /v1/audio/transcriptions endpoint (whisper.cpp
+ * server, speaches and LocalAI all serve it). Ollama has no speech-to-text, so voice uses a separate server.
+ * @param source the LAN source (base_url and model name)
+ * @param wavPath 16 kHz mono WAV slice
+ * @param lang language hint
+ * @param prompt vocabulary hint
+ */
+export async function remoteTranscribe(source: Extract<RemoteSource, { kind: 'lan' }>, wavPath: string, lang: 'en' | 'tl' | 'auto', prompt?: string): Promise<string> {
+  const form = new FormData();
+  form.append('file', new File(wavPath.startsWith('file://') ? wavPath : `file://${wavPath}`), 'audio.wav');
+  form.append('model', source.model || 'whisper-1');
+  form.append('response_format', 'json');
+  if (lang !== 'auto') form.append('language', lang);
+  if (prompt) form.append('prompt', prompt);
+  const res = await fetch(`${source.base_url}/v1/audio/transcriptions`, { method: 'POST', body: form, signal: AbortSignal.timeout(30_000) });
+  const json: unknown = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`Laptop said ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
+  const text = field(json, 'text');
+  if (typeof text !== 'string') throw new Error('The voice server sent a reply Tara could not read');
+  return text;
+}
+
+/**
  * Model names a source offers, for the settings pickers. Ollama lists its pulled models; OpenRouter lists models that
  * accept the needed input (image or audio), so the list is current instead of hard-coded.
  * @param source where to look; for LAN only base_url is used
  * @param needs input the job requires
  */
 export async function listModels(source: RemoteSource, needs: 'text' | 'image' | 'audio'): Promise<string[]> {
+  if (source.kind === 'lan' && needs === 'audio') {
+    // Whisper servers follow OpenAI's /v1/models; whisper.cpp has none and accepts any name, so an empty list is fine
+    const res = await fetch(`${source.base_url}/v1/models`, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) return [];
+    const data = field(await res.json(), 'data');
+    return Array.isArray(data) ? data.map((m) => field(m, 'id')).filter((id): id is string => typeof id === 'string') : [];
+  }
   if (source.kind === 'lan') {
     const res = await fetch(`${source.base_url}/api/tags`, { signal: AbortSignal.timeout(6000) });
     const models = field(await res.json(), 'models');
