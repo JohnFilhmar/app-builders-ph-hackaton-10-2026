@@ -6,6 +6,7 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "start": "node --experimental-strip-types server.ts"
+    "start": "node --experimental-strip-types --no-warnings --import ./app_paths.mjs server.ts",
+    "check": "node --experimental-strip-types --no-warnings --import ./app_paths.mjs leaderboard_check.ts"
   }
 }

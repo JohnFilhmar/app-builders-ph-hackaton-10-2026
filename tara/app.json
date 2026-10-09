@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Tara",
+    "slug": "tara",
+    "scheme": "tara",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ph.appbuilders.tara",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSLocalNetworkUsageDescription": "Downloads Tara's models from the team server during setup.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "ph.appbuilders.tara",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#1D1612",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Tara listens while you hold the mic button: reading aloud, counting reps, or a check-in. Your voice is never saved."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Tara looks at your Before and After photos and your notes. Photos stay on this phone."
+        }
+      ],
+      "expo-notifications",
+      "expo-asset",
+      "llama.rn",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e7ccbc70-1573-4649-bfc1-1726d7e3243e"
+      }
+    },
+    "owner": "fill.dev"
+  }
+}
