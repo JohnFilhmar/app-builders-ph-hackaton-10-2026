@@ -39,11 +39,13 @@ function field(obj: unknown, key: string): unknown {
 }
 
 const thinkingModels = new Map<string, Promise<boolean>>();
+// laptop models seen thinking even when told not to (older Ollama ignores reasoning_effort); they get the think block
+const thinksAnyway = new Set<string>();
 
 /**
- * Whether a laptop model is a reasoning model. Ollama lists "thinking" in its capabilities; such models (qwen3-vl)
- * spend the whole token budget thinking and answer with empty text, and ignore the think flag on both endpoints.
- * Asked once per model per app run.
+ * Whether a laptop model may reason before it answers, from the "thinking" capability Ollama lists. This only offers
+ * the Let it think switch: some models listed as thinking (qwen3 instruct) never actually reason. Asked once per
+ * model per app run.
  */
 export function isThinkingModel(source: RemoteSource): Promise<boolean> {
   if (source.kind !== 'lan') return Promise.resolve(false);
@@ -61,7 +63,8 @@ export function isThinkingModel(source: RemoteSource): Promise<boolean> {
   return asked;
 }
 
-// an already-closed think block as the start of the reply: Qwen3 models then answer straight away
+// an already-closed think block as the start of the reply: a Qwen3 model that thinks anyway then answers straight away.
+// Only for models seen thinking: a model that never thinks echoes it and loops on <tool_call>
 const SKIP_THINKING = { role: 'assistant', content: '<think>\n\n</think>\n\n' } as const;
 
 /** URL and headers for an OpenAI-compatible chat endpoint: Ollama serves one at /v1, OpenRouter natively. */
@@ -92,30 +95,45 @@ export async function remoteChat(source: RemoteSource, messages: ChatMessage[], 
     attachment && i === messages.length - 1 && m.role === 'user' ? { role: m.role, content: [attachment, { type: 'text', text: m.content }] } : { role: m.role, content: m.content },
   );
   const maxTokens = options.maxTokens ?? 256;
-  const canThink = await isThinkingModel(source);
-  const letThink = canThink && source.kind === 'lan' && source.think === true && maxTokens > PROBE_TOKENS;
-  const body = {
+  const modelKey = source.kind === 'lan' ? `${source.base_url}|${source.model}` : '';
+  const letThink = source.kind === 'lan' && source.think === true && maxTokens > PROBE_TOKENS && (await isThinkingModel(source));
+  const bodyFor = (prefill: boolean) => ({
     model: source.model,
-    messages: canThink && !letThink ? [...sent, SKIP_THINKING] : sent,
+    messages: prefill ? [...sent, SKIP_THINKING] : sent,
     max_tokens: letThink ? maxTokens + THINKING_BUDGET : maxTokens,
     temperature: options.temperature ?? 0.3,
     stream: false,
+    // newer Ollama (0.40) skips reasoning on this; models that cannot think ignore it
+    ...(source.kind === 'lan' && !letThink ? { reasoning_effort: 'none' } : {}),
     ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
-  };
+  });
   if (letThink) {
+    const body = bodyFor(false);
     const streamed = await streamChat(url, headers, body, (reasoning, content) => {
       if (reasoning) options.onThinking?.(reasoning);
       if (content) options.onToken?.(content);
     }, 240_000);
     return cleanAnswer(streamed.content);
   }
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(90_000) });
-  const json: unknown = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(`${source.kind === 'lan' ? 'Laptop' : 'OpenRouter'} said ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
-  const choices = field(json, 'choices');
-  const text = Array.isArray(choices) ? field(field(choices[0], 'message'), 'content') : undefined;
-  if (typeof text !== 'string') throw new Error('The server sent a reply Tara could not read');
-  return cleanAnswer(text);
+  const ask = async (prefill: boolean) => {
+    const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(bodyFor(prefill)), signal: AbortSignal.timeout(90_000) });
+    const json: unknown = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(`${source.kind === 'lan' ? 'Laptop' : 'OpenRouter'} said ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
+    const choices = field(json, 'choices');
+    const message = Array.isArray(choices) ? field(choices[0], 'message') : undefined;
+    const text = field(message, 'content');
+    if (typeof text !== 'string') throw new Error('The server sent a reply Tara could not read');
+    const reasoning = field(message, 'reasoning');
+    return { text, reasoned: typeof reasoning === 'string' && reasoning.trim().length > 0 };
+  };
+  const prefill = thinksAnyway.has(modelKey);
+  const first = await ask(prefill);
+  // thought despite reasoning_effort none and left no answer: close its think block for it from now on
+  if (!prefill && modelKey && !first.text.trim() && first.reasoned) {
+    thinksAnyway.add(modelKey);
+    return cleanAnswer((await ask(true)).text);
+  }
+  return cleanAnswer(first.text);
 }
 
 /** Drops any inline think block; an empty answer is a failure, so runAi falls back to the phone instead of judging nothing. */
