@@ -6,13 +6,17 @@ import { Pressable, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Field } from '@/components/Field';
+import { PixelIcon } from '@/components/poly/PixelIcon';
+import { PolyFrame } from '@/components/poly/PolyFrame';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
 import { newEventId } from '@/lib/game/completeQuest';
+import { useT } from '@/lib/i18n/translate';
 import { downloadModel } from '@/lib/models/modelDownload';
 import { isModelOnDisk } from '@/lib/models/modelPaths';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { useSetupStore } from '@/lib/stores/setupStore';
+import { PALETTE } from '@/lib/theme/palette';
 import { taraCatalogSchema, type Tier } from '@/types/catalog';
 import { errorMessage } from '@/utils/errorMessage';
 
@@ -21,41 +25,41 @@ const sizeMb = (tier: Tier) => Math.round(tier.files.reduce((n, f) => n + f.size
 const fits = (tier: Tier) => ramGb === 0 || ramGb + 0.5 >= tier.min_ram_gb;
 
 function TierRow({ tier, isChosen, onChoose }: { tier: Tier; isChosen: boolean; onChoose: () => void }) {
+  const t = useT();
   const isLocked = !fits(tier);
   return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: isChosen, disabled: isLocked }}
-      disabled={isLocked}
-      onPress={onChoose}
-      className={`gap-1 rounded-2xl border-2 p-3 ${isChosen ? 'border-sipag-500 bg-sipag-300/40' : 'border-banig-200 bg-white'}`}
-    >
-      <View className="flex-row items-center justify-between">
-        <Text className="text-base font-bold text-tara-900">
-          {isChosen ? '● ' : '○ '}
-          {tier.label}
-          {tier.recommended ? '  (recommended)' : ''}
-        </Text>
-        <Text className="text-xs text-tara-500">{sizeMb(tier)} MB</Text>
-      </View>
-      <Text className="text-sm text-tara-700">{tier.summary}</Text>
-      {tier.pros.map((p) => (
-        <Text key={p} className="text-sm text-leaf-700">
-          + {p}
-        </Text>
-      ))}
-      {tier.cons.map((c) => (
-        <Text key={c} className="text-sm text-tara-500">
-          − {c}
-        </Text>
-      ))}
-      {isLocked ? (
-        <View className="absolute inset-0 items-center justify-center rounded-2xl bg-white/85 p-3">
-          <Text className="text-center text-sm font-bold text-tara-700">
-            Hindi kaya ng phone na ito. Needs {tier.min_ram_gb} GB RAM; this phone has {ramGb.toFixed(1)} GB.
-          </Text>
+    <Pressable accessibilityRole="radio" accessibilityState={{ checked: isChosen, disabled: isLocked }} disabled={isLocked} onPress={onChoose}>
+      <PolyFrame cut={10} fill={isChosen ? '#FFF4D1' : PALETTE.white} stroke={isChosen ? PALETTE.sipag500 : PALETTE.banig300} strokeWidth={isChosen ? 2.5 : 1.5}>
+        <View className="gap-1 p-3.5">
+          <View className="flex-row items-center justify-between gap-2">
+            <View className="flex-1 flex-row items-center gap-2">
+              {isChosen ? <PixelIcon name="check" size={16} color={PALETTE.sipag600} /> : null}
+              <Text className="font-pixel-bold text-base text-ink-900">{tier.label}</Text>
+              {tier.recommended ? <Text className="font-pixel text-xs text-sipag-600">{t('BEST PICK', 'MUNGKAHI')}</Text> : null}
+            </View>
+            <Text className="font-pixel text-xs text-tara-700">{sizeMb(tier)} MB</Text>
+          </View>
+          <Text className="text-sm text-tara-700">{tier.summary}</Text>
+          {tier.pros.map((p) => (
+            <Text key={p} className="text-sm text-leaf-700">
+              + {p}
+            </Text>
+          ))}
+          {tier.cons.map((c) => (
+            <Text key={c} className="text-sm text-tara-700">
+              - {c}
+            </Text>
+          ))}
         </View>
-      ) : null}
+        {isLocked ? (
+          <View className="absolute inset-0 flex-row items-center justify-center gap-2 bg-banig-50/90 p-3">
+            <PixelIcon name="lock" size={18} color={PALETTE.tara700} />
+            <Text className="flex-1 text-center text-sm font-bold text-tara-700">
+              {t(`This phone can't run it. Needs ${tier.min_ram_gb} GB RAM; this phone has ${ramGb.toFixed(1)} GB.`, `Hindi kaya ng phone na ito. Kailangan ng ${tier.min_ram_gb} GB RAM; ${ramGb.toFixed(1)} GB lang ito.`)}
+            </Text>
+          </View>
+        ) : null}
+      </PolyFrame>
     </Pressable>
   );
 }
@@ -63,6 +67,7 @@ function TierRow({ tier, isChosen, onChoose }: { tier: Tier; isChosen: boolean; 
 /** First launch, step 2: choose a tier per capability (only tiers this phone can run), then download them once. */
 export default function SetupModels() {
   const { backendUrl, catalog, chosenTiers, baseAvatar, setBackendUrl, setCatalog, chooseTier, finishSetup } = useSetupStore();
+  const t = useT();
   const append = useGameStore((s) => s.append);
   const [serverInput, setServerInput] = useState(backendUrl);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -108,23 +113,23 @@ export default function SetupModels() {
       for (const [i, tier] of chosen.entries()) {
         if (await isModelOnDisk(tier)) continue;
         await downloadModel(tier, {
-          onProgress: (f) => setProgress(`Downloading ${i + 1} of ${chosen.length}: ${Math.round(f * 100)}%`),
-          onVerifying: () => setProgress(`Checking ${i + 1} of ${chosen.length}...`),
+          onProgress: (f) => setProgress(t(`Downloading ${i + 1} of ${chosen.length}: ${Math.round(f * 100)}%`, `Dina-download ${i + 1} sa ${chosen.length}: ${Math.round(f * 100)}%`)),
+          onVerifying: () => setProgress(t(`Checking ${i + 1} of ${chosen.length}...`, `Sinusuri ${i + 1} sa ${chosen.length}...`)),
         });
       }
       append({ id: newEventId('evt'), type: 'profile_created', at: Date.now(), payload: { base_avatar: baseAvatar } });
       finishSetup();
       router.replace('/bahay');
     } catch (err) {
-      setProgress(`Download stopped: ${errorMessage(err)}. Tap again to resume.`);
+      setProgress(t(`Download stopped: ${errorMessage(err)}. Tap again to resume.`, `Huminto ang download: ${errorMessage(err)}. I-tap ulit para ituloy.`));
     }
     setIsDownloading(false);
   };
 
   return (
-    <TaraScreen title="Ihanda si Tara" subtitle="Set up Tara's brain, eyes and ears, once.">
+    <TaraScreen title={t('Get Tara ready', 'Ihanda si Tara')} subtitle={t("Set up Tara's brain, eyes and ears, once.", 'Ihanda ang utak, mata at tainga ni Tara, isang beses lang.')} canGoBack>
       <TaraBubble
-        text={isDownloading ? (progress ?? 'Getting ready...') : 'Pick how I think, see and hear. These download once, then I work with no signal at all.'}
+        text={isDownloading ? (progress ?? t('Getting ready...', 'Naghahanda...')) : t('Pick how I think, see and hear. These download once, then I work with no signal at all.', 'Piliin kung paano ako mag-isip, tumingin at makinig. Isang beses lang i-download, tapos gagana ako kahit walang signal.')}
         isThinking={isDownloading || isLoading}
       />
       {catalog?.capabilities.map((cap) => (
@@ -136,14 +141,14 @@ export default function SetupModels() {
         </Card>
       ))}
       {loadError ? (
-        <Card title="Can't reach the Tara server">
+        <Card title={t("Can't reach the Tara server", 'Hindi maabot ang Tara server')}>
           <Text className="text-sm text-tara-700">{loadError}</Text>
-          <Field label="Server address" value={serverInput} onChangeText={setServerInput} autoCapitalize="none" keyboardType="url" />
-          <Button label="Try again" variant="secondary" onPress={() => setBackendUrl(serverInput)} />
+          <Field label={t('Server address', 'Address ng server')} value={serverInput} onChangeText={setServerInput} autoCapitalize="none" keyboardType="url" />
+          <Button label={t('Try again', 'Subukan ulit')} variant="secondary" onPress={() => setBackendUrl(serverInput)} />
         </Card>
       ) : null}
       {progress && !isDownloading ? <Text className="text-sm text-tara-700">{progress}</Text> : null}
-      <Button label={`Download (${chosen.reduce((n, t) => n + sizeMb(t), 0)} MB) & start`} onPress={() => void downloadAll()} disabled={!canStart} isBusy={isDownloading} />
+      <Button label={t(`Download ${chosen.reduce((n, tier) => n + sizeMb(tier), 0)} MB and start`, `I-download ${chosen.reduce((n, tier) => n + sizeMb(tier), 0)} MB at simulan`)} onPress={() => void downloadAll()} disabled={!canStart} isBusy={isDownloading} />
     </TaraScreen>
   );
 }

@@ -2,7 +2,11 @@ import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { PixelIcon } from '@/components/poly/PixelIcon';
+import { PolyFrame } from '@/components/poly/PolyFrame';
 import { startLiveTranscription, type LiveTranscription } from '@/lib/audio/liveTranscriber';
+import { useT } from '@/lib/i18n/translate';
+import { PALETTE } from '@/lib/theme/palette';
 import type { Lang } from '@/types/chat';
 
 type HoldToTalkProps = {
@@ -19,6 +23,7 @@ type HoldToTalkProps = {
  * and audio slices are deleted as soon as they are transcribed.
  */
 export function HoldToTalk({ lang, prompt, label, onLiveText, onDone, disabled = false }: HoldToTalkProps) {
+  const t = useT();
   const session = useRef<LiveTranscription | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -28,7 +33,7 @@ export function HoldToTalk({ lang, prompt, label, onLiveText, onDone, disabled =
     if (session.current || isFinishing) return;
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      setError('Tara needs the microphone for this. Allow it in Settings.');
+      setError(t('Tara needs the microphone for this. Allow it in Settings.', 'Kailangan ni Tara ang mikropono. Payagan ito sa Settings.'));
       return;
     }
     setError(null);
@@ -47,20 +52,21 @@ export function HoldToTalk({ lang, prompt, label, onLiveText, onDone, disabled =
     onDone(result);
   };
 
+  const isOff = disabled || isFinishing;
   return (
-    <View className="items-center gap-2">
-      {isListening ? <Text className="rounded-full bg-leaf-500 px-3 py-1 text-sm font-bold text-white">● Nakikinig (Listening)</Text> : null}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        disabled={disabled || isFinishing}
-        onPressIn={() => void begin()}
-        onPressOut={() => void end()}
-        className={`h-36 w-36 items-center justify-center rounded-full ${isListening ? 'bg-leaf-500' : 'bg-sipag-500'} ${disabled || isFinishing ? 'opacity-50' : ''}`}
-      >
-        <Text className="px-3 text-center text-base font-extrabold text-tara-900">{isFinishing ? 'Sandali...' : isListening ? 'Release to stop' : label}</Text>
+    <View className="items-center gap-3">
+      <Text className={`font-pixel text-sm ${isListening ? 'text-leaf-700' : 'text-tara-700'}`}>
+        {isListening ? t('Listening...', 'Nakikinig...') : isFinishing ? t('One moment...', 'Sandali...') : ' '}
+      </Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={isOff} onPressIn={() => void begin()} onPressOut={() => void end()} style={{ opacity: isOff ? 0.5 : 1 }}>
+        <PolyFrame cut={44} fill={isListening ? PALETTE.leaf500 : PALETTE.ink900} depth={isListening ? 0 : 6} depthColor={PALETTE.tara700} stroke={isListening ? PALETTE.leaf700 : undefined} strokeWidth={4}>
+          <View className="h-40 w-40 items-center justify-center gap-2" style={{ marginTop: isListening ? 6 : 0 }}>
+            <PixelIcon name="mic" size={44} color={isListening ? PALETTE.white : PALETTE.sipag400} />
+            <Text className="px-3 text-center font-pixel-bold text-base text-banig-50">{isListening ? t('Release to stop', 'Bitawan para tumigil') : label}</Text>
+          </View>
+        </PolyFrame>
       </Pressable>
-      {error ? <Text className="text-sm text-tara-700">{error}</Text> : null}
+      {error ? <Text className="text-center text-sm text-tara-700">{error}</Text> : null}
     </View>
   );
 }

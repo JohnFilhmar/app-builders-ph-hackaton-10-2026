@@ -53,4 +53,5 @@ export const PASSAGES: Passage[] = [
 ];
 
 /** Vocabulary hint for counting aloud, so the speech model expects numbers in either language. */
-export const COUNTING_PROMPT = 'one, two, three, four, five, ten, twenty, isa, dalawa, tatlo, apat, lima, sampu, labing-isa, dalawampu';
+// no numbers here: on a silent slice whisper can echo its prompt, and an echoed "twenty" would read as 20 reps
+export const COUNTING_PROMPT = 'Counting exercise reps out loud, in English or Tagalog.';

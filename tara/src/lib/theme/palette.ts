@@ -1,0 +1,21 @@
+/** Hex values of the Tailwind tokens, for SVG fills and native props that cannot take a class. Mirrors tailwind.config.js. */
+export const PALETTE = {
+  banig50: '#FFFBF2',
+  banig100: '#FDF2DC',
+  banig200: '#F6E2B8',
+  banig300: '#E9CC92',
+  sipag300: '#FFD970',
+  sipag400: '#F5C542',
+  sipag500: '#E8A90E',
+  sipag600: '#B98200',
+  tara300: '#C79A6B',
+  tara500: '#8B5A2B',
+  tara700: '#5C3A1A',
+  tara900: '#3A2410',
+  leaf100: '#E3F5EA',
+  leaf500: '#2E9E5B',
+  leaf700: '#1F6E3F',
+  ink700: '#3B2A1C',
+  ink900: '#21170F',
+  white: '#FFFFFF',
+} as const;

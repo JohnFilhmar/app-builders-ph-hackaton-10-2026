@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { CapabilityId, TaraCatalog } from '@/types/catalog';
+import type { Lang } from '@/types/chat';
 import type { BaseAvatar } from '@/types/gameEvents';
 
 type SetupStore = {
@@ -14,6 +15,12 @@ type SetupStore = {
   isSetupDone: boolean;
   baseAvatar: BaseAvatar;
   isNanayMode: boolean;
+  /** app copy language; AI output stays English first either way */
+  language: Lang;
+  hasChosenLanguage: boolean;
+  heroName: string;
+  setHeroName: (heroName: string) => void;
+  setLanguage: (language: Lang) => void;
   setNanayMode: (isNanayMode: boolean) => void;
   setBaseAvatar: (baseAvatar: BaseAvatar) => void;
   hasHydrated: boolean;
@@ -34,6 +41,11 @@ export const useSetupStore = create<SetupStore>()(
       isSetupDone: false,
       baseAvatar: 'female',
       isNanayMode: false,
+      language: 'en',
+      hasChosenLanguage: false,
+      heroName: '',
+      setHeroName: (heroName) => set({ heroName: heroName.trim().slice(0, 24) }),
+      setLanguage: (language) => set({ language, hasChosenLanguage: true }),
       setNanayMode: (isNanayMode) => set({ isNanayMode }),
       setBaseAvatar: (baseAvatar) => set({ baseAvatar }),
       hasHydrated: false,
@@ -54,7 +66,7 @@ export const useSetupStore = create<SetupStore>()(
     {
       name: 'tara-setup',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ backendUrl: s.backendUrl, catalog: s.catalog, chosenTiers: s.chosenTiers, isSetupDone: s.isSetupDone, baseAvatar: s.baseAvatar, isNanayMode: s.isNanayMode }),
+      partialize: (s) => ({ backendUrl: s.backendUrl, catalog: s.catalog, chosenTiers: s.chosenTiers, isSetupDone: s.isSetupDone, baseAvatar: s.baseAvatar, isNanayMode: s.isNanayMode, language: s.language, hasChosenLanguage: s.hasChosenLanguage, heroName: s.heroName }),
       onRehydrateStorage: () => () => useSetupStore.setState({ hasHydrated: true }),
     },
   ),

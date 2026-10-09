@@ -1,46 +1,57 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Modal, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
+import { AvatarStage } from '@/components/avatar/AvatarStage';
+import { PixelIcon } from '@/components/poly/PixelIcon';
+import { useT, type Translate } from '@/lib/i18n/translate';
 import { useGameStore } from '@/lib/stores/gameStore';
+import { PALETTE } from '@/lib/theme/palette';
 
-const UNLOCKS: Record<number, string[]> = {
-  2: ['Tier 2 outfit pieces', 'Companion: Bugoy the carabao calf', 'Aura: Alitaptap (fireflies)', 'Ehersisyo with Bilang Mode', 'Pabuya list'],
-  3: ['Tier 3 outfit pieces', 'Companion: Haribon the eagle chick', 'Aura: Bahaghari (rainbow)', 'Baon Days streak savers'],
-};
+// only what the build really gates by level, so the banner never promises a feature that is not there
+const unlocksFor = (level: number, t: Translate): string[] =>
+  ({
+    2: [t('Exercise quests: count your reps aloud', 'Ehersisyo: bilangin ang reps nang malakas'), t('Rewards: set your own treats', 'Pabuya: sariling premyo')],
+    3: [t('Baon Days: streak savers', 'Baon Days: pang-ligtas ng streak')],
+  })[level] ?? [];
 
-/** Plays once per new level: a banig banner with the level name and what just unlocked. */
+/** Plays once per new level: a dark stage, the hero jumping on the level-up burst, and what just unlocked. */
 export function LevelUpOverlay() {
+  const t = useT();
   const level = useGameStore((s) => s.state.level);
   const seenLevel = useGameStore((s) => s.seenLevel);
   const markLevelSeen = useGameStore((s) => s.markLevelSeen);
-  const unroll = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(0)).current;
   const isVisible = level.level > seenLevel;
 
   useEffect(() => {
     if (!isVisible) return;
-    unroll.setValue(0);
-    Animated.spring(unroll, { toValue: 1, useNativeDriver: true, friction: 6 }).start();
-  }, [isVisible, unroll]);
+    rise.setValue(0);
+    Animated.spring(rise, { toValue: 1, useNativeDriver: true, friction: 6, tension: 90 }).start();
+  }, [isVisible, rise]);
 
   return (
-    <Modal visible={isVisible} transparent animationType="fade" onRequestClose={() => markLevelSeen(level.level)}>
-      <View className="flex-1 items-center justify-center bg-black/50 p-6">
-        <Animated.View style={{ transform: [{ scaleY: unroll }] }} className="w-full gap-4 rounded-3xl border-4 border-sipag-500 bg-banig-100 p-6">
-          <Text className="text-center text-sm font-bold uppercase text-tara-500">Level up!</Text>
-          <Text className="text-center text-4xl font-extrabold text-tara-900">
-            Level {level.level} · {level.name}
-          </Text>
-          <View className="gap-1.5">
-            {(UNLOCKS[level.level] ?? []).map((u) => (
-              <Text key={u} className="text-base text-tara-700">
-                ✓ {u}
-              </Text>
+    <Modal visible={isVisible} animationType="fade" statusBarTranslucent onRequestClose={() => markLevelSeen(level.level)}>
+      <SafeAreaView className="flex-1 bg-ink-900">
+        <View className="flex-1 justify-between gap-4 p-5">
+          <Animated.View style={{ opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }} className="items-center gap-1 pt-6">
+            <Text className="font-pixel-bold text-5xl text-sipag-400">LEVEL UP!</Text>
+            <Text className="font-pixel-bold text-2xl text-banig-50">Lv. {level.level}</Text>
+            <Text className="font-pixel text-lg text-sipag-300">{level.name}</Text>
+          </Animated.View>
+          <AvatarStage className="flex-1" fx="level_up_fx" celebrate />
+          <View className="gap-2.5">
+            {unlocksFor(level.level, t).map((u) => (
+              <View key={u} className="flex-row items-center gap-2.5">
+                <PixelIcon name="star" size={18} color={PALETTE.sipag400} />
+                <Text className="flex-1 text-base text-banig-50">{u}</Text>
+              </View>
             ))}
           </View>
-          <Button label="Tara na!" onPress={() => markLevelSeen(level.level)} />
-        </Animated.View>
-      </View>
+          <Button label={t('Awesome!', 'Ang galing!')} variant="gold" onPress={() => markLevelSeen(level.level)} />
+        </View>
+      </SafeAreaView>
     </Modal>
   );
 }

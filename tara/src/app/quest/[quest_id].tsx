@@ -5,23 +5,33 @@ import { Image, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Segmented } from '@/components/Segmented';
-import { HoldToTalk } from '@/components/quest/HoldToTalk';
+import { PixelIcon } from '@/components/poly/PixelIcon';
+import { PolyFrame } from '@/components/poly/PolyFrame';
+import { CountRepsProof } from '@/components/quest/CountRepsProof';
 import { QuizPanel } from '@/components/quest/QuizPanel';
+import { QuizPrep } from '@/components/quest/QuizPrep';
+import { ReadAloudProof } from '@/components/quest/ReadAloudProof';
 import { ResultPanel } from '@/components/quest/ResultPanel';
+import { BlockBar } from '@/components/tara/LevelBar';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
 import { checkBeforeAfter } from '@/lib/checks/beforeAfter';
-import { prepareQuiz } from '@/lib/checks/notesQuiz';
-import { highestCount, scoreReading } from '@/lib/checks/scoring';
+import { checkReps } from '@/lib/checks/repCheck';
 import { completeQuest } from '@/lib/game/completeQuest';
-import { COUNTING_PROMPT, PASSAGES, QUEST_INFO } from '@/lib/quests/questTypes';
+import { useT } from '@/lib/i18n/translate';
+import { proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
+import { PASSAGES } from '@/lib/quests/questTypes';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { useQuestStore, type QuestWork } from '@/lib/stores/questStore';
+import { PALETTE } from '@/lib/theme/palette';
 import type { ProofTier } from '@/types/gameEvents';
 import type { CheckOutcome } from '@/types/quest';
 import { errorMessage } from '@/utils/errorMessage';
 
-type Phase = 'start' | 'running' | 'proof' | 'checking' | 'result';
+type Phase = 'start' | 'preparing' | 'running' | 'proof' | 'checking' | 'result';
+
+// reading and counting aloud ARE the task, so these skip the timer and go straight to the mic
+const isVoiceQuest = (type: string) => type === 'basa' || type === 'ehersisyo';
 
 async function takePhoto(): Promise<string | null> {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -34,9 +44,11 @@ async function takePhoto(): Promise<string | null> {
 const pad = (n: number) => String(n).padStart(2, '0');
 // one shared empty value: a fresh {} per selector call would re-render forever
 const NO_WORK: QuestWork = {};
+const tierOf = (o: CheckOutcome | null): ProofTier | null => (o && (o.verdict === 'patunay' || o.verdict === 'nakita' || o.verdict === 'sabi_ko') ? o.verdict : null);
 
 /** Runs one quest end to end: start step, timer, proof, Tara's check and the result. */
 export default function QuestRun() {
+  const t = useT();
   const { quest_id: questId } = useLocalSearchParams<{ quest_id: string }>();
   const openQuest = useGameStore((s) => s.state.openQuests.find((q) => q.quest_id === questId));
   // keep the quest after it completes, so the result screen can finish showing
@@ -50,12 +62,11 @@ export default function QuestRun() {
   const patch = useQuestStore((s) => s.patch);
   const clear = useQuestStore((s) => s.clear);
 
-  const [phase, setPhase] = useState<Phase>(work.started_at ? 'running' : 'start');
+  const [phase, setPhase] = useState<Phase>(() => (work.started_at ? (openQuest && isVoiceQuest(openQuest.quest_type) ? 'proof' : 'running') : 'start'));
   const [now, setNow] = useState(Date.now());
   const [stage, setStage] = useState('');
   const [outcome, setOutcome] = useState<CheckOutcome | null>(null);
   const [afterUri, setAfterUri] = useState<string | undefined>();
-  const [liveText, setLiveText] = useState('');
   const [isCommitted, setIsCommitted] = useState(false);
   const [passageId, setPassageId] = useState(work.passage_id ?? PASSAGES[0]?.id ?? '');
 
@@ -64,9 +75,8 @@ export default function QuestRun() {
     return () => clearInterval(timer);
   }, []);
 
-  const elapsedMin = work.started_at ? Math.max(1, Math.round((now - work.started_at) / 60_000)) : 0;
-  const tierOf = (o: CheckOutcome | null): ProofTier | null =>
-    o && (o.verdict === 'patunay' || o.verdict === 'nakita' || o.verdict === 'sabi_ko') ? o.verdict : null;
+  const elapsedMs = work.started_at ? now - work.started_at : 0;
+  const elapsedMin = work.started_at ? Math.max(1, Math.round(elapsedMs / 60_000)) : 0;
   const preview = useMemo(() => {
     const tier = tierOf(outcome);
     if (!quest || !tier) return null;
@@ -75,14 +85,14 @@ export default function QuestRun() {
 
   if (!quest || !questId) {
     return (
-      <TaraScreen title="Tapos na ito">
-        <TaraBubble text="This Gawain is already done or was removed." />
-        <Button label="Bumalik sa Bahay" onPress={() => router.replace('/bahay')} />
+      <TaraScreen title={t('Already done', 'Tapos na ito')} canGoBack>
+        <TaraBubble text={t('This quest is already done or was removed.', 'Tapos na o tinanggal na ang Gawain na ito.')} />
+        <Button label={t('Back home', 'Bumalik sa Bahay')} onPress={() => router.replace('/bahay')} />
       </TaraScreen>
     );
   }
-  const info = QUEST_INFO[quest.quest_type];
   const passage = PASSAGES.find((p) => p.id === passageId) ?? PASSAGES[0];
+  const repTarget = work.rep_target ?? 10;
 
   const start = async () => {
     if (quest.quest_type === 'linis') {
@@ -93,36 +103,46 @@ export default function QuestRun() {
     if (quest.quest_type === 'aral') {
       const uri = await takePhoto();
       if (!uri) return;
+      // the quiz is made now, before studying starts, so the timer only runs once it is ready
       patch(questId, { notes_uri: uri, quiz_status: 'generating' });
-      // the quiz is prepared now, while the user studies, so it is ready before the timer ends
-      void prepareQuiz(uri)
-        .then((quiz) => patch(questId, quiz ? { quiz, quiz_status: 'ready' } : { quiz_status: 'failed' }))
-        .catch(() => patch(questId, { quiz_status: 'failed' }));
+      setPhase('preparing');
+      return;
     }
     if (quest.quest_type === 'basa') patch(questId, { passage_id: passageId });
-    if (quest.quest_type === 'ehersisyo') patch(questId, { rep_target: work.rep_target ?? 20 });
+    if (quest.quest_type === 'ehersisyo') patch(questId, { rep_target: repTarget });
     patch(questId, { started_at: Date.now() });
+    setPhase(isVoiceQuest(quest.quest_type) ? 'proof' : 'running');
+  };
+
+  const startStudying = (patchWork: Partial<QuestWork>) => {
+    patch(questId, { ...patchWork, started_at: Date.now() });
     setPhase('running');
   };
 
   const finishTask = () => {
     if (quest.quest_type === 'sariling') {
-      setOutcome({ verdict: 'sabi_ko', said: 'Salamat! Your word counts here. (Sabi Ko)', evidence: {} });
+      setOutcome({ verdict: 'sabi_ko', said: t('Thank you! Your word counts here.', 'Salamat! Sapat ang salita mo dito.'), evidence: {} });
       setPhase('result');
     } else setPhase('proof');
   };
 
-  const runBeforeAfter = async () => {
-    const uri = await takePhoto();
-    if (!uri || !work.before_uri) return;
-    setAfterUri(uri);
+  const check = async (run: () => Promise<CheckOutcome>, firstStage: string) => {
+    setStage(firstStage);
     setPhase('checking');
     try {
-      setOutcome(await checkBeforeAfter(quest.title, work.before_uri, uri, setStage));
+      setOutcome(await run());
     } catch (err) {
-      setOutcome({ verdict: 'not_confirmed', said: `I had trouble looking at the photos (${errorMessage(err)}).`, evidence: {} });
+      setOutcome({ verdict: 'not_confirmed', said: t(`I had trouble checking (${errorMessage(err)}).`, `Nagkaproblema ako sa pag-check (${errorMessage(err)}).`), evidence: {} });
     }
     setPhase('result');
+  };
+
+  const runBeforeAfter = async () => {
+    const uri = await takePhoto();
+    const beforeUri = work.before_uri;
+    if (!uri || !beforeUri) return;
+    setAfterUri(uri);
+    await check(() => checkBeforeAfter(quest.title, beforeUri, uri, setStage), t('Tara is looking...', 'Tumitingin si Tara...'));
   };
 
   const commit = (disputed: boolean) => {
@@ -133,59 +153,102 @@ export default function QuestRun() {
     clear(questId);
     setIsCommitted(true);
     if (disputed && event.type === 'quest_completed') {
-      const banked = event.payload.banked > 0 ? ` +${event.payload.banked} more lands tomorrow morning.` : '';
-      setOutcome({ verdict: 'sabi_ko', said: `Naniniwala ako sa'yo. (I believe you.) +${event.payload.xp} Sipag.${banked}`, evidence: {} });
+      const banked = event.payload.banked > 0 ? t(` +${event.payload.banked} more lands tomorrow morning.`, ` +${event.payload.banked} pa bukas ng umaga.`) : '';
+      setOutcome({ verdict: 'sabi_ko', said: t(`I believe you. +${event.payload.xp} Sipag.${banked}`, `Naniniwala ako sa'yo. +${event.payload.xp} Sipag.${banked}`), evidence: {} });
     } else router.replace('/bahay');
   };
 
   return (
-    <TaraScreen title={quest.title} subtitle={`${info.label} (${info.english}) · ${quest.planned_minutes} min · ${info.proofHint}`}>
+    <TaraScreen canGoBack={phase !== 'result'}>
+      {phase !== 'result' ? (
+        <PolyFrame cut={12} fill={PALETTE.white} stroke={PALETTE.banig300}>
+          <View className="flex-row items-center gap-3 p-3.5">
+            <PolyFrame cut={8} fill={PALETTE.ink900}>
+              <View className="h-14 w-14 items-center justify-center">
+                <PixelIcon name={QUEST_ICON[quest.quest_type]} size={28} color={PALETTE.sipag400} />
+              </View>
+            </PolyFrame>
+            <View className="flex-1 gap-1">
+              <Text className="font-pixel-bold text-xl text-ink-900" numberOfLines={2}>
+                {quest.title}
+              </Text>
+              <Text className="text-sm text-tara-700">
+                {questName(quest.quest_type, t)} · {quest.planned_minutes} min
+              </Text>
+              <Text className="text-sm text-tara-700">{proofHint(quest.quest_type, t)}</Text>
+            </View>
+          </View>
+        </PolyFrame>
+      ) : null}
+
       {phase === 'start' ? (
         <View className="gap-4">
-          {quest.quest_type === 'linis' ? <TaraBubble text="Take a Before photo of the spot, then start. Kaya mo 'yan!" /> : null}
-          {quest.quest_type === 'aral' ? <TaraBubble text="Take a photo of your notes. I'll prepare a 5-question quiz while you study." /> : null}
+          {quest.quest_type === 'linis' ? <TaraBubble text={t("Take a Before photo of the spot, then start. You've got this!", "Kunan ng Before photo ang lugar, tapos simulan. Kaya mo 'yan!")} /> : null}
+          {quest.quest_type === 'aral' ? (
+            <TaraBubble text={t("Take a photo of your notes. I'll make a 5-question quiz first, then your study timer starts.", 'Kunan ang notes mo. Gagawa muna ako ng 5-tanong na quiz, tapos magsisimula ang timer.')} />
+          ) : null}
           {quest.quest_type === 'basa' ? (
             <>
-              <TaraBubble text="Pick a page to read aloud. Hold the button and read when the timer is done." />
+              <TaraBubble text={t('Pick a page, then hold the button and read it aloud.', 'Pumili ng pahina, tapos pindutin at basahin nang malakas.')} />
               <Segmented options={PASSAGES.map((p) => ({ value: p.id, label: `${p.title} (${p.lang.toUpperCase()})` }))} value={passageId} onChange={setPassageId} />
             </>
           ) : null}
           {quest.quest_type === 'ehersisyo' ? (
             <>
-              <TaraBubble text="How many reps? Count them aloud while holding the button at the end." />
-              <Segmented options={[10, 20, 30, 60].map((n) => ({ value: String(n), label: `${n} reps` }))} value={String(work.rep_target ?? 20)} onChange={(v) => patch(questId, { rep_target: Number(v) })} />
+              <TaraBubble
+                text={t(
+                  "How many reps? Hold the button and count aloud while you exercise. Warm-up counts are fine, I'll tell them apart.",
+                  'Ilang reps? Pindutin at magbilang habang nag-eehersisyo. Okay lang ang warm-up, kaya kong ihiwalay.',
+                )}
+              />
+              <Segmented options={[5, 10, 20, 30].map((n) => ({ value: String(n), label: `${n} reps` }))} value={String(repTarget)} onChange={(v) => patch(questId, { rep_target: Number(v) })} />
             </>
           ) : null}
-          {quest.quest_type === 'sariling' ? <TaraBubble text="Your own task. When you're done, tell me and it counts as Sabi Ko." /> : null}
-          <Button label={quest.quest_type === 'linis' ? 'Kunan ang Before photo' : quest.quest_type === 'aral' ? 'Kunan ang notes' : 'Simulan'} onPress={() => void start()} />
+          {quest.quest_type === 'sariling' ? <TaraBubble text={t("Your own task. When you're done, tell me and it counts as your word (1x).", 'Sariling Gawain. Pag tapos ka na, sabihin mo lang, bilang na (1x).')} /> : null}
+          <Button
+            label={quest.quest_type === 'linis' ? t('Take the Before photo', 'Kunan ang Before photo') : quest.quest_type === 'aral' ? t('Photograph my notes', 'Kunan ang notes') : t('Start', 'Simulan')}
+            icon={quest.quest_type === 'linis' || quest.quest_type === 'aral' ? 'camera' : undefined}
+            onPress={() => void start()}
+          />
         </View>
       ) : null}
 
+      {phase === 'preparing' && work.notes_uri ? (
+        <QuizPrep notesUri={work.notes_uri} onReady={(quiz) => startStudying({ quiz, quiz_status: 'ready' })} onSkip={() => startStudying({ quiz_status: 'failed' })} />
+      ) : null}
+
       {phase === 'running' ? (
-        <View className="items-center gap-4">
-          <Text className="text-6xl font-black text-tara-900">
-            {pad(Math.floor((now - (work.started_at ?? now)) / 60_000))}:{pad(Math.floor(((now - (work.started_at ?? now)) / 1000) % 60))}
-          </Text>
-          <Text className="text-base text-tara-500">of {quest.planned_minutes} minutes</Text>
-          {work.before_uri ? <Image source={{ uri: work.before_uri }} className="h-40 w-full rounded-2xl" /> : null}
-          {quest.quest_type === 'aral' ? (
-            <TaraBubble
-              text={work.quiz_status === 'ready' ? 'Your quiz is ready for when you finish.' : work.quiz_status === 'failed' ? "I couldn't read the notes well, so this one counts as Nakita (seen)." : 'Making your quiz from the notes...'}
-              isThinking={work.quiz_status === 'generating'}
-            />
-          ) : (
-            <TaraBubble text="Kaya mo 'yan! I'm right here." />
-          )}
-          <View className="w-full">
-            <Button label="Tapos na! (Done)" onPress={finishTask} />
-          </View>
+        <View className="gap-4">
+          <PolyFrame cut={18} fill={PALETTE.ink900} depth={5} depthColor={PALETTE.tara700}>
+            <View className="items-center gap-3 px-5 py-7">
+              <PixelIcon name="clock" size={24} color={PALETTE.sipag400} />
+              <Text className="font-pixel-bold text-6xl text-banig-50">
+                {pad(Math.floor(elapsedMs / 60_000))}:{pad(Math.floor((elapsedMs / 1000) % 60))}
+              </Text>
+              <Text className="font-pixel text-base text-sipag-300">{t(`of ${quest.planned_minutes} minutes`, `sa ${quest.planned_minutes} minuto`)}</Text>
+              <View className="w-full">
+                <BlockBar progress={elapsedMs / (quest.planned_minutes * 60_000)} blocks={20} />
+              </View>
+            </View>
+          </PolyFrame>
+          {work.before_uri ? <Image source={{ uri: work.before_uri }} className="h-40 w-full" /> : null}
+          <TaraBubble
+            text={
+              quest.quest_type === 'aral'
+                ? work.quiz_status === 'ready'
+                  ? t('Your quiz is ready for when you finish. Study well!', 'Handa na ang quiz mo pag tapos ka. Mag-aral nang mabuti!')
+                  : t('No quiz this time, so this one counts as Seen (2x).', 'Walang quiz ngayon, kaya Nakita (2x) ito.')
+                : t("You've got this! I'm right here.", "Kaya mo 'yan! Nandito lang ako.")
+            }
+          />
+          <Button label={t('Mark as done', 'Tapos na!')} icon="check" onPress={finishTask} />
         </View>
       ) : null}
 
       {phase === 'proof' && quest.quest_type === 'linis' ? (
         <View className="gap-4">
-          <TaraBubble text="Take the After photo from the same spot." />
-          <Button label="Kunan ang After photo" onPress={() => void runBeforeAfter()} />
+          <TaraBubble text={t('Take the After photo from the same spot.', 'Kunan ang After photo sa parehong puwesto.')} />
+          <Button label={t('Take the After photo', 'Kunan ang After photo')} icon="camera" onPress={() => void runBeforeAfter()} />
         </View>
       ) : null}
 
@@ -195,21 +258,20 @@ export default function QuestRun() {
             quiz={work.quiz}
             onFinish={(correct) => {
               const total = work.quiz?.length ?? 5;
+              const evidence = { quiz_correct: correct, quiz_total: total };
               setOutcome(
                 correct >= 4
-                  ? { verdict: 'patunay', said: `${correct} of ${total}! You really studied.`, evidence: { quiz_correct: correct, quiz_total: total } }
-                  : { verdict: 'nakita', said: `${correct} of ${total}. Your notes count as Nakita (seen). Review and try again next time!`, evidence: { quiz_correct: correct, quiz_total: total } },
+                  ? { verdict: 'patunay', said: t(`${correct} of ${total}! You really studied.`, `${correct} sa ${total}! Nag-aral ka talaga.`), evidence }
+                  : { verdict: 'nakita', said: t(`${correct} of ${total}. Your notes count as Seen (2x). Review and try again next time!`, `${correct} sa ${total}. Nakita (2x) ang notes mo. Balikan at subukan ulit!`), evidence },
               );
               setPhase('result');
             }}
           />
-        ) : work.quiz_status === 'generating' ? (
-          <TaraBubble text="Still writing your quiz, almost there..." isThinking />
         ) : (
           <Button
-            label="Tingnan ang resulta"
+            label={t('See the result', 'Tingnan ang resulta')}
             onPress={() => {
-              setOutcome({ verdict: 'nakita', said: 'I saw your notes but could not make a quiz from them. This counts as Nakita (seen).', evidence: {} });
+              setOutcome({ verdict: 'nakita', said: t('I saw your notes. This counts as Seen (2x).', 'Nakita ko ang notes mo. Nakita (2x) ito.'), evidence: {} });
               setPhase('result');
             }}
           />
@@ -217,61 +279,20 @@ export default function QuestRun() {
       ) : null}
 
       {phase === 'proof' && quest.quest_type === 'basa' && passage ? (
-        <View className="gap-4">
-          <View className="rounded-2xl bg-white p-4">
-            <Text className="text-lg leading-7 text-tara-900">{passage.text}</Text>
-          </View>
-          {liveText ? <Text className="text-sm italic text-tara-500">Heard: {liveText}</Text> : null}
-          <HoldToTalk
-            lang={passage.lang}
-            label="Hold and read"
-            onLiveText={setLiveText}
-            onDone={({ text, seconds }) => {
-              const score = scoreReading(passage.text, text);
-              const wpm = seconds > 0 ? Math.round((score.matched / seconds) * 60) : 0;
-              const skipped = score.skipped.slice(0, 3).join(', ');
-              const evidence = { read_seconds: Math.round(seconds), words_read: score.matched, words_total: score.total };
-              setOutcome(
-                score.ratio >= 0.8
-                  ? { verdict: 'patunay', said: `You read ${score.matched} of ${score.total} words at ${wpm} words per minute.${skipped ? ` Skipped: ${skipped}.` : ''} Hindi na-save ang boses mo. (Your voice was not saved.)`, evidence }
-                  : score.ratio >= 0.4
-                    ? { verdict: 'nakita', said: `I heard ${score.matched} of ${score.total} words. Nakita (seen)! Read the whole page next time for Patunay.`, evidence }
-                    : { verdict: 'not_confirmed', said: `I only caught ${score.matched} of ${score.total} words. Try again closer to the phone?`, evidence },
-              );
-              setPhase('result');
-            }}
-          />
-        </View>
+        <ReadAloudProof
+          passage={passage}
+          onResult={(result) => {
+            setOutcome(result);
+            setPhase('result');
+          }}
+        />
       ) : null}
 
       {phase === 'proof' && quest.quest_type === 'ehersisyo' ? (
-        <View className="gap-4">
-          <Text className="text-center text-5xl font-black text-tara-900">
-            {highestCount(liveText)} / {work.rep_target ?? 20}
-          </Text>
-          <HoldToTalk
-            lang="auto"
-            prompt={COUNTING_PROMPT}
-            label="Hold and count"
-            onLiveText={setLiveText}
-            onDone={({ text }) => {
-              const reps = highestCount(text);
-              const target = work.rep_target ?? 20;
-              const evidence = { reps, rep_target: target };
-              setOutcome(
-                reps >= target
-                  ? { verdict: 'patunay', said: `${reps} reps! Isa pa? Ang lakas mo!`, evidence }
-                  : reps > 0
-                    ? { verdict: 'nakita', said: `I counted ${reps} of ${target}. Nakita (seen)! Keep counting aloud next time.`, evidence }
-                    : { verdict: 'not_confirmed', said: "I didn't catch the counting. Try again, a bit louder?", evidence },
-              );
-              setPhase('result');
-            }}
-          />
-        </View>
+        <CountRepsProof target={repTarget} onCounted={(text) => void check(() => checkReps(quest.title, repTarget, text), t('Tara is checking your reps...', 'Tinitingnan ni Tara ang reps mo...'))} />
       ) : null}
 
-      {phase === 'checking' ? <TaraBubble text={stage || 'Tara is looking...'} isThinking /> : null}
+      {phase === 'checking' ? <TaraBubble text={stage} isThinking /> : null}
 
       {phase === 'result' && outcome ? (
         <ResultPanel
@@ -282,11 +303,10 @@ export default function QuestRun() {
           beforeUri={work.before_uri}
           afterUri={afterUri}
           canRetry={outcome.verdict === 'person' || (quest.quest_type === 'linis' ? !work.retake_used : true)}
-          retryLabel={quest.quest_type === 'linis' ? 'Kunan ulit (Retake)' : 'Subukan ulit (Try again)'}
+          retryLabel={quest.quest_type === 'linis' ? t('Retake the photo', 'Kunan ulit') : t('Try again', 'Subukan ulit')}
           onAccept={() => (isCommitted ? router.replace('/bahay') : commit(false))}
           onRetry={() => {
             if (quest.quest_type === 'linis') patch(questId, { retake_used: true });
-            setLiveText('');
             setOutcome(null);
             setPhase('proof');
           }}

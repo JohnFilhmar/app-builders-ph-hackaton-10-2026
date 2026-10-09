@@ -3,20 +3,25 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { Field } from '@/components/Field';
-import { Segmented } from '@/components/Segmented';
+import { PixelIcon } from '@/components/poly/PixelIcon';
+import { PolyFrame } from '@/components/poly/PolyFrame';
 import { QuestCard } from '@/components/tara/QuestCard';
-import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
 import { newEventId } from '@/lib/game/completeQuest';
 import { QUEST_TYPES } from '@/lib/game/constants';
+import { useT } from '@/lib/i18n/translate';
+import { PROOF_ICON, proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
 import { classifyQuest, QUEST_INFO } from '@/lib/quests/questTypes';
 import { useGameStore } from '@/lib/stores/gameStore';
+import { PALETTE } from '@/lib/theme/palette';
 import type { QuestType } from '@/types/gameEvents';
 
-/** Plan a Gawain: Tara suggests a type and duration instantly; the user decides everything. */
+const MINUTE_CHOICES = [5, 15, 30, 60];
+
+/** Plan a Gawain: Tara suggests a type and duration as you type; the user decides everything. */
 export default function Gawain() {
+  const t = useT();
   const state = useGameStore((s) => s.state);
   const append = useGameStore((s) => s.append);
   const [title, setTitle] = useState('');
@@ -25,8 +30,7 @@ export default function Gawain() {
   const [isTouched, setIsTouched] = useState(false);
 
   // Ehersisyo unlocks at level 2; locked systems stay hidden until then
-  const types = QUEST_TYPES.filter((t) => t !== 'ehersisyo' || state.level.level >= 2);
-  const options = types.map((t) => ({ value: t, label: QUEST_INFO[t].label }));
+  const types = QUEST_TYPES.filter((type) => type !== 'ehersisyo' || state.level.level >= 2);
 
   const onTitle = (text: string) => {
     setTitle(text);
@@ -46,37 +50,65 @@ export default function Gawain() {
   };
 
   return (
-    <TaraScreen title="Gawain" subtitle="Ikaw ang bahala kung ano ang mahalaga. (You decide what counts.)">
-      <Card>
-        <Field label="Anong Gawain? (What task?)" value={title} onChangeText={onTitle} placeholder="Linis ng kwarto, 30 mins" />
-        <TaraBubble text={`Suggestion: ${QUEST_INFO[questType].label} (${QUEST_INFO[questType].english}), ${minutes} min. Proof: ${QUEST_INFO[questType].proofHint}.`} />
-        <Segmented
-          options={options}
-          value={questType}
-          onChange={(t) => {
-            setIsTouched(true);
-            setQuestType(t);
-          }}
-        />
-        <View className="flex-row items-center justify-center gap-6">
-          <Pressable accessibilityRole="button" accessibilityLabel="Less time" onPress={() => setMinutes((m) => Math.max(5, m - 5))} className="h-12 w-12 items-center justify-center rounded-full bg-banig-200">
-            <Text className="text-2xl font-bold text-tara-900">−</Text>
-          </Pressable>
-          <Text className="text-2xl font-extrabold text-tara-900">{minutes} minuto</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="More time" onPress={() => setMinutes((m) => Math.min(120, m + 5))} className="h-12 w-12 items-center justify-center rounded-full bg-banig-200">
-            <Text className="text-2xl font-bold text-tara-900">+</Text>
-          </Pressable>
+    <TaraScreen title={t('New quest', 'Bagong Gawain')} subtitle={t('You decide what counts. Tara checks the proof.', 'Ikaw ang bahala kung ano ang mahalaga. Si Tara ang titingin sa patunay.')}>
+      <Field label={t('What will you do?', 'Anong gagawin mo?')} value={title} onChangeText={onTitle} placeholder={t('Clean my room, 30 mins', 'Linis ng kwarto, 30 mins')} />
+
+      <View className="gap-2">
+        <Text className="font-pixel text-sm text-tara-700">{t('Quest type', 'Uri ng Gawain')}</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {types.map((type) => {
+            const isPicked = type === questType;
+            return (
+              <Pressable
+                key={type}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: isPicked }}
+                onPress={() => {
+                  setIsTouched(true);
+                  setQuestType(type);
+                }}
+                className="w-[48.5%]"
+              >
+                <PolyFrame cut={10} fill={isPicked ? PALETTE.sipag400 : PALETTE.white} stroke={isPicked ? PALETTE.sipag600 : PALETTE.banig300}>
+                  <View className="min-h-16 flex-row items-center gap-2.5 px-3 py-3">
+                    <PixelIcon name={QUEST_ICON[type]} size={24} color={isPicked ? PALETTE.ink900 : PALETTE.tara500} />
+                    <Text className="flex-1 font-pixel text-base text-ink-900" numberOfLines={2}>
+                      {questName(type, t)}
+                    </Text>
+                  </View>
+                </PolyFrame>
+              </Pressable>
+            );
+          })}
         </View>
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Button label="Idagdag" variant="secondary" onPress={() => declare(false)} disabled={!title.trim()} />
+        <PolyFrame cut={8} fill={PALETTE.ink900}>
+          <View className="flex-row items-center gap-2 px-3.5 py-2.5">
+            <PixelIcon name={PROOF_ICON[questType]} size={16} color={PALETTE.sipag400} />
+            <Text className="flex-1 text-sm text-banig-50">{proofHint(questType, t)}</Text>
           </View>
-          <View className="flex-1">
-            <Button label="Simulan na" onPress={() => declare(true)} disabled={!title.trim()} />
-          </View>
+        </PolyFrame>
+      </View>
+
+      <View className="gap-2">
+        <Text className="font-pixel text-sm text-tara-700">{t('How long?', 'Gaano katagal?')}</Text>
+        <View className="flex-row gap-2">
+          {MINUTE_CHOICES.map((m) => (
+            <Pressable key={m} accessibilityRole="radio" accessibilityState={{ checked: minutes === m }} onPress={() => setMinutes(m)} className="flex-1">
+              <PolyFrame cut={7} fill={minutes === m ? PALETTE.sipag400 : PALETTE.white} stroke={minutes === m ? PALETTE.sipag600 : PALETTE.banig300}>
+                <Text className="py-3 text-center font-pixel-bold text-base text-ink-900">{m}m</Text>
+              </PolyFrame>
+            </Pressable>
+          ))}
         </View>
-      </Card>
-      {state.openQuests.length > 0 ? <Text className="text-lg font-extrabold text-tara-900">Naka-plano (Planned)</Text> : null}
+        {!MINUTE_CHOICES.includes(minutes) ? <Text className="text-sm text-tara-700">{t(`From your title: ${minutes} min`, `Mula sa pamagat: ${minutes} min`)}</Text> : null}
+      </View>
+
+      <View className="gap-3 pt-2">
+        <Button label={t('Start now', 'Simulan na')} onPress={() => declare(true)} disabled={!title.trim()} />
+        <Button label={t('Add for later', 'Idagdag para mamaya')} variant="secondary" icon="plus" onPress={() => declare(false)} disabled={!title.trim()} />
+      </View>
+
+      {state.openQuests.length > 0 ? <Text className="pt-4 font-pixel-bold text-xl text-ink-900">{t('Planned', 'Naka-plano')}</Text> : null}
       {state.openQuests.map((q) => (
         <QuestCard key={q.quest_id} title={q.title} questType={q.quest_type} minutes={q.planned_minutes} status="open" onPress={() => router.push(`/quest/${q.quest_id}`)} />
       ))}

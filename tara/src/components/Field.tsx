@@ -1,19 +1,26 @@
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
 
+import { PolyFrame } from '@/components/poly/PolyFrame';
+import { PALETTE } from '@/lib/theme/palette';
+
 type FieldProps = Omit<TextInputProps, 'className'> & { label: string };
 
-/** Labelled text input. */
+/** Labelled text input in a chamfered frame. */
 export function Field({ label, multiline, ...inputProps }: FieldProps) {
   return (
-    <View className="gap-1">
-      <Text className="text-xs font-medium uppercase text-tara-500">{label}</Text>
-      <TextInput
-        {...inputProps}
-        multiline={multiline}
-        placeholderTextColor="#9ca3af"
-        className={`rounded-xl border border-banig-300 bg-white px-3 py-2.5 text-base text-tara-900 ${multiline ? 'min-h-24' : ''}`}
-        textAlignVertical={multiline ? 'top' : 'center'}
-      />
+    <View className="gap-1.5">
+      <Text className="font-pixel text-sm text-tara-700">{label}</Text>
+      <PolyFrame cut={8} fill={PALETTE.white} stroke={PALETTE.banig300}>
+        <TextInput
+          {...inputProps}
+          multiline={multiline}
+          placeholderTextColor={PALETTE.tara300}
+          selectionColor={PALETTE.sipag500}
+          cursorColor={PALETTE.ink900}
+          className={`px-3.5 py-3 text-base text-ink-900 ${multiline ? 'min-h-28' : 'min-h-12'}`}
+          textAlignVertical={multiline ? 'top' : 'center'}
+        />
+      </PolyFrame>
     </View>
   );
 }

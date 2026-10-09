@@ -33,3 +33,16 @@ describe('highestCount', () => {
     expect(highestCount('uhm okay')).toBe(0);
   });
 });
+
+import { countingRuns, numberSequence } from '@/lib/checks/scoring';
+
+describe('counting runs', () => {
+  it('separates a warm-up from the real set', () => {
+    const seq = numberSequence('1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 5, 6, 7, 8, 8, 7, 6, 5, 4, 3, 2, 1');
+    expect(countingRuns(seq).map((r) => `${r.from}-${r.to}`)).toEqual(['1-4', '1-4', '1-8', '8-1']);
+  });
+
+  it('reads Tagalog counting in order', () => {
+    expect(numberSequence("isa dalawa tatlo ... labing-isa dalawampu't isa")).toEqual([1, 2, 3, 11, 21]);
+  });
+});

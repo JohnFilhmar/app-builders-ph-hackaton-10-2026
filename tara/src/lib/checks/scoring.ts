@@ -97,3 +97,48 @@ export function highestCount(transcript: string): number {
   }
   return best;
 }
+
+/**
+ * Every number spoken, in order (English, Tagalog, Taglish or digits), so counting can be judged as a sequence.
+ * @param transcript what the speech model heard
+ */
+export function numberSequence(transcript: string): number[] {
+  const words = normalize(transcript.replace(/'t\s+/g, "'t"));
+  const out: number[] = [];
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i] ?? '';
+    const next = words[i + 1] ?? '';
+    const isEnPair = w in TENS_EN && next in ONES_EN;
+    const isTlPair = Object.keys(TENS_TL).some((t) => w.startsWith(t)) && next in ONES_TL;
+    const pair = isEnPair || isTlPair ? (wordToNumber(`${w}-${next}`) ?? wordToNumber(`${w}${next}`)) : null;
+    const value = pair ?? wordToNumber(w);
+    if (value === null || value > 500) continue;
+    out.push(value);
+    if (pair !== null) i += 1;
+  }
+  return out;
+}
+
+export type CountRun = { from: number; to: number; length: number };
+
+/**
+ * Splits a number sequence into counting runs: stretches that go up or down by one each step.
+ * "1 2 3 4 1 2 3 4 1 2 3 4 5 6 7 8 8 7 6 5 4 3 2 1" gives 1-4, 1-4, 1-8, 8-1.
+ * @param seq numbers in spoken order
+ */
+export function countingRuns(seq: number[]): CountRun[] {
+  const runs: CountRun[] = [];
+  let start = 0;
+  for (let i = 1; i <= seq.length; i++) {
+    const prev = seq[i - 1];
+    const cur = seq[i];
+    const startVal = seq[start];
+    const dir = start + 1 < seq.length ? (seq[start + 1] ?? 0) - (startVal ?? 0) : 0;
+    const continues = cur !== undefined && prev !== undefined && Math.abs(dir) === 1 && cur - prev === dir;
+    if (!continues) {
+      if (startVal !== undefined && prev !== undefined) runs.push({ from: startVal, to: prev, length: i - start });
+      start = i;
+    }
+  }
+  return runs;
+}
