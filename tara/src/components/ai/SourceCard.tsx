@@ -1,4 +1,3 @@
-import { Asset } from 'expo-asset';
 import { useEffect, useState } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 
@@ -9,7 +8,7 @@ import { Segmented } from '@/components/Segmented';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { normalizeServer, useAiStore, voiceServerKey, type AiSource, type RemoteSource } from '@/lib/ai/aiSources';
 import { isThinkingModel, listModels, remoteChat, voiceServerHeaders } from '@/lib/ai/remoteChat';
-import { heroArtFor } from '@/lib/hero/heroArt';
+import { TEST_IMAGE_BASE64 } from '@/lib/ai/testImage';
 import { useT } from '@/lib/i18n/translate';
 import { PALETTE } from '@/lib/theme/palette';
 import type { CapabilityId } from '@/types/catalog';
@@ -118,9 +117,9 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
       const started = Date.now();
       let thoughtChars = 0;
       // a photo model gets a real picture: vision-only models (moondream) answer nothing to a text-only prompt
-      const imagePath = needs === 'image' ? ((await Asset.fromModule(heroArtFor(1)).downloadAsync()).localUri ?? undefined) : undefined;
+      const imageBase64 = needs === 'image' ? TEST_IMAGE_BASE64 : undefined;
       const prompt = needs === 'image' ? 'What is in this picture? Answer in one short sentence.' : 'Reply with only the word OK.';
-      const reply = await remoteChat(remote(model), [{ role: 'user', content: prompt }], { maxTokens: needs === 'image' ? 60 : 20, temperature: 0, imagePath, onThinking: (r) => (thoughtChars = r.length) });
+      const reply = await remoteChat(remote(model), [{ role: 'user', content: prompt }], { maxTokens: needs === 'image' ? 60 : 20, temperature: 0, imageBase64, onThinking: (r) => (thoughtChars = r.length) });
       const thought = thoughtChars ? t(`, after ${thoughtChars} characters of thinking`, `, pagkatapos mag-isip ng ${thoughtChars} na titik`) : '';
       return t(`Works: "${reply.trim().slice(0, 60)}" in ${Date.now() - started} ms${thought}`, `Gumagana: "${reply.trim().slice(0, 60)}" sa ${Date.now() - started} ms${thought}`);
     });

@@ -11,6 +11,8 @@ type RemoteOptions = {
   temperature?: number;
   responseFormat?: unknown;
   imagePath?: string;
+  /** a JPEG already in base64, used when there is no imagePath */
+  imageBase64?: string;
   audioPath?: string;
   /** receives a thinking model's reasoning so far, when the source lets it think */
   onThinking?: (reasoning: string) => void;
@@ -81,7 +83,9 @@ export async function remoteChat(source: RemoteSource, messages: ChatMessage[], 
   const { url, headers } = await endpoint(source);
   const attachment: ContentPart | null = options.imagePath
     ? { type: 'image_url', image_url: { url: `data:image/${/\.png$/i.test(options.imagePath) ? 'png' : 'jpeg'};base64,${await fileBase64(options.imagePath)}` } }
-    : options.audioPath
+    : options.imageBase64
+      ? { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${options.imageBase64}` } }
+      : options.audioPath
       ? { type: 'input_audio', input_audio: { data: await fileBase64(options.audioPath), format: 'wav' } }
       : null;
   const sent = messages.map((m, i) =>
