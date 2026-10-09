@@ -40,9 +40,9 @@ export function ProfileHeader() {
     <View className="gap-3">
       <PolyFrame cut={14} fill={PALETTE.ink900} depth={5} depthColor={PALETTE.tara700}>
         <View className="flex-row items-center gap-3 p-4">
-          <View className="h-20 w-20 overflow-hidden bg-banig100">
-            {/* the face sits in the top third of the full-body art */}
-            <Image source={heroArtFor(state.level.level)} resizeMode="contain" style={{ position: 'absolute', width: 170, height: 170, left: -45, top: -6 }} />
+          {/* box and image share plain dp (not rem classes) so the crop ratio holds: hair to chin of the full-body art */}
+          <View className="overflow-hidden bg-banig100" style={{ width: 96, height: 96 }}>
+            <Image source={heroArtFor(state.level.level)} resizeMode="contain" style={{ position: 'absolute', width: 180, height: 180, left: -42, top: 0 }} />
           </View>
           <View className="flex-1 gap-0.5">
             <Text className="font-pixel-bold text-2xl text-banig-50">{heroName || t('Hero', 'Bida')}</Text>
