@@ -34,6 +34,15 @@ export async function checkBeforeAfter(task: string, beforeUri: string, afterUri
   const before = await runAi('eyes', [{ role: 'user', content: DESCRIBE }], noop, beforeUri, { maxTokens: 140, temperature: 0.1 });
   onStage(tr('Tara is looking at your After photo...', 'Tinitingnan ni Tara ang After photo...'));
   const after = await runAi('eyes', [{ role: 'user', content: DESCRIBE }], noop, afterUri, { maxTokens: 140, temperature: 0.1 });
+  console.log(`[linis] descriptions: ${before.text.length}/${after.text.length} chars`);
+  // the judge would be guessing from nothing, so a blank description never confirms a quest
+  if (!before.text.trim() || !after.text.trim()) {
+    return {
+      verdict: 'not_confirmed',
+      said: tr("I couldn't make out the photos this time. Try again with closer, brighter photos of the same spot.", 'Hindi ko maaninag ang mga litrato ngayon. Subukan ulit nang mas malapit at mas maliwanag na kuha ng parehong puwesto.'),
+      evidence: {},
+    };
+  }
 
   if (PERSON.test(after.text) || PERSON.test(before.text)) {
     return { verdict: 'person', said: tr("There's a person in the photo. Retake just the spot you cleaned?", 'May tao sa litrato. Kunan ulit ang nilinis na lugar lang?'), evidence: {} };
@@ -80,7 +89,7 @@ export async function checkBeforeAfter(task: string, beforeUri: string, afterUri
     const parsed: unknown = parseModelJson(judged.text, 'linis');
     if (parsed && typeof parsed === 'object' && 'done' in parsed && 'tara' in parsed) {
       done = parsed.done === true;
-      line = typeof parsed.tara === 'string' ? parsed.tara : '';
+      line = typeof parsed.tara === 'string' ? parsed.tara.trim() : '';
     }
   } catch {
     done = false;

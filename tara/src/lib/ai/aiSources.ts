@@ -40,13 +40,16 @@ export function normalizeServer(input: string, defaultPort = 11434): string {
   return url;
 }
 
-const KEY_NAME = 'openrouter_api_key';
+// secrets live in the phone's secure storage (Android Keystore), never in plain app storage; saving empty clears one
+const secureKey = (name: string) => ({
+  get: () => SecureStore.getItemAsync(name),
+  set: (key: string) => (key.trim() ? SecureStore.setItemAsync(name, key.trim()) : SecureStore.deleteItemAsync(name)),
+});
 
-/** The OpenRouter key lives in the phone's secure storage (Android Keystore), never in plain app storage. */
-export const cloudKey = {
-  get: () => SecureStore.getItemAsync(KEY_NAME),
-  set: (key: string) => (key.trim() ? SecureStore.setItemAsync(KEY_NAME, key.trim()) : SecureStore.deleteItemAsync(KEY_NAME)),
-};
+/** The OpenRouter API key. */
+export const cloudKey = secureKey('openrouter_api_key');
+/** Optional key for the laptop voice server, sent in its Authorization header. */
+export const voiceServerKey = secureKey('lan_voice_api_key');
 
 /** Where the AI runs overall, for the Home badge: Offline only when every job is on-device. */
 export function aiReach(sources: Record<CapabilityId, AiSource>): 'offline' | 'lan' | 'cloud' {

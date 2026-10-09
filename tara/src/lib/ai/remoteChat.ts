@@ -1,6 +1,6 @@
 import { File } from 'expo-file-system';
 
-import { cloudKey, type RemoteSource } from '@/lib/ai/aiSources';
+import { cloudKey, voiceServerKey, type RemoteSource } from '@/lib/ai/aiSources';
 import type { ChatMessage } from '@/types/chat';
 
 const OPENROUTER = 'https://openrouter.ai/api/v1';
@@ -19,6 +19,32 @@ function field(obj: unknown, key: string): unknown {
   const record: { [k: string]: unknown } = { ...obj };
   return record[key];
 }
+
+const thinkingModels = new Map<string, Promise<boolean>>();
+
+/**
+ * Whether a laptop model is a reasoning model. Ollama lists "thinking" in its capabilities; such models (qwen3-vl)
+ * spend the whole token budget thinking and answer with empty text, and ignore the think flag on both endpoints.
+ * Asked once per model per app run.
+ */
+function isThinkingModel(source: RemoteSource): Promise<boolean> {
+  if (source.kind !== 'lan') return Promise.resolve(false);
+  const key = `${source.base_url}|${source.model}`;
+  const known = thinkingModels.get(key);
+  if (known) return known;
+  const asked = fetch(`${source.base_url}/api/show`, { method: 'POST', body: JSON.stringify({ model: source.model }), signal: AbortSignal.timeout(5000) })
+    .then((res) => res.json())
+    .then((json: unknown) => {
+      const caps = field(json, 'capabilities');
+      return Array.isArray(caps) && caps.includes('thinking');
+    })
+    .catch(() => false);
+  thinkingModels.set(key, asked);
+  return asked;
+}
+
+// an already-closed think block as the start of the reply: Qwen3 models then answer straight away
+const SKIP_THINKING = { role: 'assistant', content: '<think>\n\n</think>\n\n' } as const;
 
 /** URL and headers for an OpenAI-compatible chat endpoint: Ollama serves one at /v1, OpenRouter natively. */
 async function endpoint(source: RemoteSource): Promise<{ url: string; headers: Record<string, string> }> {
@@ -42,11 +68,12 @@ export async function remoteChat(source: RemoteSource, messages: ChatMessage[], 
     : options.audioPath
       ? { type: 'input_audio', input_audio: { data: await fileBase64(options.audioPath), format: 'wav' } }
       : null;
+  const sent = messages.map((m, i) =>
+    attachment && i === messages.length - 1 && m.role === 'user' ? { role: m.role, content: [attachment, { type: 'text', text: m.content }] } : { role: m.role, content: m.content },
+  );
   const body = {
     model: source.model,
-    messages: messages.map((m, i) =>
-      attachment && i === messages.length - 1 && m.role === 'user' ? { role: m.role, content: [attachment, { type: 'text', text: m.content }] } : { role: m.role, content: m.content },
-    ),
+    messages: (await isThinkingModel(source)) ? [...sent, SKIP_THINKING] : sent,
     max_tokens: options.maxTokens ?? 256,
     temperature: options.temperature ?? 0.3,
     stream: false,
@@ -58,7 +85,20 @@ export async function remoteChat(source: RemoteSource, messages: ChatMessage[], 
   const choices = field(json, 'choices');
   const text = Array.isArray(choices) ? field(field(choices[0], 'message'), 'content') : undefined;
   if (typeof text !== 'string') throw new Error('The server sent a reply Tara could not read');
-  return text;
+  const answer = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  // an empty answer is a failure, so runAi falls back to the phone instead of judging nothing
+  if (!answer) throw new Error('The model sent an empty answer (it may have used its whole budget thinking)');
+  return answer;
+}
+
+/**
+ * Headers for the laptop voice server: an Authorization header when a key is saved, nothing otherwise. A bare key is
+ * sent as a Bearer token; one that already names its scheme ("Basic ...", "Token ...") is sent as typed.
+ */
+export async function voiceServerHeaders(): Promise<Record<string, string>> {
+  const key = await voiceServerKey.get();
+  if (!key) return {};
+  return { Authorization: /^\w+\s+\S/.test(key) ? key : `Bearer ${key}` };
 }
 
 /**
@@ -76,7 +116,7 @@ export async function remoteTranscribe(source: Extract<RemoteSource, { kind: 'la
   form.append('response_format', 'json');
   if (lang !== 'auto') form.append('language', lang);
   if (prompt) form.append('prompt', prompt);
-  const res = await fetch(`${source.base_url}/v1/audio/transcriptions`, { method: 'POST', body: form, signal: AbortSignal.timeout(30_000) });
+  const res = await fetch(`${source.base_url}/v1/audio/transcriptions`, { method: 'POST', body: form, headers: await voiceServerHeaders(), signal: AbortSignal.timeout(30_000) });
   const json: unknown = await res.json().catch(() => null);
   if (!res.ok) throw new Error(`Laptop said ${res.status}: ${JSON.stringify(json).slice(0, 160)}`);
   const text = field(json, 'text');
@@ -93,7 +133,7 @@ export async function remoteTranscribe(source: Extract<RemoteSource, { kind: 'la
 export async function listModels(source: RemoteSource, needs: 'text' | 'image' | 'audio'): Promise<string[]> {
   if (source.kind === 'lan' && needs === 'audio') {
     // Whisper servers follow OpenAI's /v1/models; whisper.cpp has none and accepts any name, so an empty list is fine
-    const res = await fetch(`${source.base_url}/v1/models`, { signal: AbortSignal.timeout(6000) });
+    const res = await fetch(`${source.base_url}/v1/models`, { headers: await voiceServerHeaders(), signal: AbortSignal.timeout(6000) });
     if (!res.ok) return [];
     const data = field(await res.json(), 'data');
     return Array.isArray(data) ? data.map((m) => field(m, 'id')).filter((id): id is string => typeof id === 'string') : [];

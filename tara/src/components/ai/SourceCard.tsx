@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -6,8 +6,8 @@ import { Card } from '@/components/Card';
 import { Field } from '@/components/Field';
 import { Segmented } from '@/components/Segmented';
 import { PolyFrame } from '@/components/poly/PolyFrame';
-import { normalizeServer, useAiStore, type AiSource, type RemoteSource } from '@/lib/ai/aiSources';
-import { listModels, remoteChat } from '@/lib/ai/remoteChat';
+import { normalizeServer, useAiStore, voiceServerKey, type AiSource, type RemoteSource } from '@/lib/ai/aiSources';
+import { listModels, remoteChat, voiceServerHeaders } from '@/lib/ai/remoteChat';
 import { useT } from '@/lib/i18n/translate';
 import { PALETTE } from '@/lib/theme/palette';
 import type { CapabilityId } from '@/types/catalog';
@@ -47,6 +47,18 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [voiceKey, setVoiceKey] = useState('');
+  const [hasVoiceKey, setHasVoiceKey] = useState(false);
+  const isVoiceLan = needs === 'audio' && source.kind === 'lan';
+  useEffect(() => {
+    if (isVoiceLan) void voiceServerKey.get().then((k) => setHasVoiceKey(Boolean(k)));
+  }, [isVoiceLan]);
+  const saveVoiceKey = async () => {
+    await voiceServerKey.set(voiceKey);
+    setHasVoiceKey(Boolean(voiceKey.trim()));
+    setVoiceKey('');
+    setStatus(voiceKey.trim() ? t('Key saved', 'Na-save ang key') : t('Key removed', 'Tinanggal ang key'));
+  };
 
   const model = source.kind === 'device' ? '' : source.model;
   // a Whisper server usually listens on 8080; Ollama on 11434
@@ -84,8 +96,9 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
     run(async () => {
       if (needs === 'audio' && source.kind === 'lan') {
         // a voice server cannot answer a chat prompt; reaching it is the test
-        const res = await fetch(`${normalizeServer(server, port)}/v1/models`, { signal: AbortSignal.timeout(6000) }).catch(() => null);
+        const res = await fetch(`${normalizeServer(server, port)}/v1/models`, { headers: await voiceServerHeaders(), signal: AbortSignal.timeout(6000) }).catch(() => null);
         if (!res) throw new Error(t('Cannot reach the voice server', 'Hindi maabot ang voice server'));
+        if (res.status === 401 || res.status === 403) throw new Error(t('The voice server refused the key', 'Tinanggihan ng voice server ang key'));
         return t('Voice server reachable', 'Naaabot ang voice server');
       }
       const started = Date.now();
@@ -133,6 +146,19 @@ export function SourceCard({ capability, title, needs, allowLan }: SourceCardPro
                 <ModelChip key={s} name={s.replace(/^https?:\/\//, '')} isPicked={normalizeServer(server, port) === s} onPress={() => setServer(s)} />
               ))}
             </View>
+          ) : null}
+          {isVoiceLan ? (
+            <>
+              <Field
+                label={t('Authorization key (optional)', 'Authorization key (opsyonal)')}
+                value={voiceKey}
+                onChangeText={setVoiceKey}
+                placeholder={hasVoiceKey ? t('Saved. Type to replace, or save empty to remove', 'Naka-save. I-type para palitan, o i-save nang blangko para tanggalin') : 'sk-... or Basic ...'}
+                autoCapitalize="none"
+                secureTextEntry
+              />
+              <Button label={t('Save key', 'I-save ang key')} variant="secondary" icon={null} onPress={() => void saveVoiceKey()} />
+            </>
           ) : null}
         </>
       ) : null}
