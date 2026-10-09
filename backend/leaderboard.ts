@@ -91,6 +91,16 @@ export function createLeaderboard(path: string) {
     return { status: 200, body: { stored: checked.events.length, clamped: checked.clamped } };
   };
 
+  // the app's Reset progress: the player starts over at 0 under the same name and id
+  const reset = (body: unknown): Reply => {
+    const { user_id } = (body ?? {}) as { user_id?: unknown };
+    const player = typeof user_id === 'string' ? board.players[user_id] : undefined;
+    if (!player) return { status: 404, body: { error: 'Join the leaderboard first.' } };
+    player.events = [];
+    save();
+    return { status: 200, body: { stored: 0 } };
+  };
+
   const ranking = (period: 'week' | 'all', userId: string | undefined, now: number): Reply => {
     // ponytail: recomputes every player per request; cache per minute if the board gets busy
     const rows = Object.entries(board.players).map(([id, p]) => {
@@ -105,5 +115,5 @@ export function createLeaderboard(path: string) {
     return { status: 200, body: { period, rows: ranked.slice(0, 50).map(strip), me: me ? strip(me) : null, players: ranked.length } };
   };
 
-  return { register, upload, ranking };
+  return { register, upload, reset, ranking };
 }

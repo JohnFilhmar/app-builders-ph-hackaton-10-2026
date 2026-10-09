@@ -110,6 +110,7 @@ const server = createServer(async (req, res) => {
       return send(res, 200, '{"ok":true}');
     }
     if (req.method === 'POST' && url.pathname === '/lb/register') return reply(res, leaderboard.register(JSON.parse(await readBody(req))));
+    if (req.method === 'POST' && url.pathname === '/lb/reset') return reply(res, leaderboard.reset(JSON.parse(await readBody(req))));
     if (req.method === 'POST' && url.pathname === '/lb/events') return reply(res, leaderboard.upload(JSON.parse(await readBody(req)), Date.now()));
     if (req.method === 'GET' && url.pathname === '/lb') {
       const userId = req.headers['x-user-id'];

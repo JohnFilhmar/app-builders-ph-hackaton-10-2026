@@ -14,6 +14,8 @@ services:
       - "127.0.0.1:8787:8787"
     environment:
       PORT: "8787"
+      # the game rules count days (daily caps, streaks) in local time; players are in the Philippines, as the phone is
+      TZ: Asia/Manila
     volumes:
       # leaderboard.json and benchmark results survive rebuilds
       - tara_data:/app/backend/data

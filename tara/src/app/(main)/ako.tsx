@@ -16,6 +16,7 @@ import { aiReach, useAiStore } from '@/lib/ai/aiSources';
 import { setNanayMode } from '@/lib/alerts/reminders';
 import { newEventId } from '@/lib/game/completeQuest';
 import { buildDemoEvents } from '@/lib/game/demoSeed';
+import { resetProgress } from '@/lib/game/resetProgress';
 import { useT, type Translate } from '@/lib/i18n/translate';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { useSetupStore } from '@/lib/stores/setupStore';
@@ -65,6 +66,29 @@ export default function Ako() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Load', style: 'destructive', onPress: () => replaceAll(buildDemoEvents(Date.now())) },
     ]);
+
+  const reset = () =>
+    Alert.alert(
+      t('Reset all progress?', 'I-reset ang lahat ng progress?'),
+      t(
+        'This clears your quests, Sipag, level, treats, shop items and badges, and sets you to 0 on the leaderboard. Downloaded models, AI settings and your name stay. This cannot be undone.',
+        'Mabubura ang Gawain, Sipag, level, premyo, items at badge mo, at magiging 0 ka sa leaderboard. Mananatili ang na-download na model, AI settings at pangalan mo. Hindi na ito maibabalik.',
+      ),
+      [
+        { text: t('Cancel', 'Huwag'), style: 'cancel' },
+        {
+          text: t('Reset everything', 'I-reset lahat'),
+          style: 'destructive',
+          onPress: () =>
+            void resetProgress().then((isBoardReset) =>
+              Alert.alert(
+                t('Fresh start!', 'Bagong simula!'),
+                isBoardReset ? t('Level 1, 0 Sipag. Your hero is ready.', 'Level 1, 0 Sipag. Handa na ang bida mo.') : t("Reset on this phone. The leaderboard could not be reached; it updates on your next sync.", 'Na-reset sa phone na ito. Hindi naabot ang leaderboard; maa-update ito sa susunod na sync.'),
+              ),
+            ),
+        },
+      ],
+    );
 
   return (
     <TaraScreen title={t('Profile', 'Ako')}>
@@ -161,6 +185,7 @@ export default function Ako() {
             }}
           />
         </View>
+        <Button label={t('Reset progress', 'I-reset ang progress')} variant="secondary" icon={null} onPress={reset} />
         <Pressable onLongPress={loadDemo} delayLongPress={1200}>
           <Text className="pt-2 text-xs text-tara-500">{reach === 'offline' ? t('Tara 0.1.0 · offline · nothing leaves this phone', 'Tara 0.1.0 · offline · walang lumalabas sa phone') : t(`Tara 0.1.0 · AI runs on ${reach === 'cloud' ? 'the cloud' : 'a laptop'} for some jobs`, `Tara 0.1.0 · may AI na tumatakbo sa ${reach === 'cloud' ? 'cloud' : 'laptop'}`)}</Text>
         </Pressable>

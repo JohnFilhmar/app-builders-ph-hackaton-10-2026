@@ -51,4 +51,9 @@ assert.equal(body.rows[0]?.xp, honest.payload.xp);
 assert.equal(body.me?.rank, 2);
 assert.ok(!JSON.stringify(board.body).includes(A), 'user ids never leave the server');
 
+assert.equal(lb.reset({ user_id: A }).status, 200);
+const afterReset = lb.ranking('all', A, NOW).body as { rows: { username: string; xp: number }[] };
+assert.equal(afterReset.rows.find((r) => r.username === 'juan_dc')?.xp, 0, 'a reset player keeps the name at 0 XP');
+assert.equal(lb.reset({ user_id: 'nobody'.repeat(4) }).status, 404);
+
 console.log('leaderboard check passed');

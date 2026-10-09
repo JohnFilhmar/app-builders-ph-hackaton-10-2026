@@ -40,6 +40,12 @@ export async function syncLedger(baseUrl: string, events: GameEvent[], username:
   }
 }
 
+/** Clears this player's uploaded ledger on the server, so a Reset progress shows 0 there too. The name stays theirs. */
+export async function resetBoard(baseUrl: string): Promise<void> {
+  const user_id = await getUserId();
+  await call(baseUrl, '/lb/reset', { method: 'POST', body: JSON.stringify({ user_id }) });
+}
+
 /** The board for a period, with this player's own row. */
 export async function fetchBoard(baseUrl: string, period: BoardPeriod): Promise<Board> {
   const user_id = await getUserId();
