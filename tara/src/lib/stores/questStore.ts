@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import type { Passage } from '@/lib/quests/questTypes';
 import type { QuizQuestion } from '@/types/quest';
 
 /** Per-quest working data that is not part of the ledger: photos, the prepared quiz, timers. */
@@ -12,6 +13,8 @@ export type QuestWork = {
   quiz_status?: 'generating' | 'ready' | 'failed';
   quiz?: QuizQuestion[];
   passage_id?: string;
+  /** the Basa page, when it came from a photo or Tara wrote it rather than a built-in page */
+  passage?: Passage;
   rep_target?: number;
   retake_used?: boolean;
 };

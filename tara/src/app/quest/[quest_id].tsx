@@ -11,6 +11,7 @@ import { CountRepsProof } from '@/components/quest/CountRepsProof';
 import { QuizPanel } from '@/components/quest/QuizPanel';
 import { QuizPrep } from '@/components/quest/QuizPrep';
 import { ReadAloudProof } from '@/components/quest/ReadAloudProof';
+import { ReadingPicker } from '@/components/quest/ReadingPicker';
 import { ResultPanel } from '@/components/quest/ResultPanel';
 import { TaraThoughts } from '@/components/tara/TaraThoughts';
 import { BlockBar } from '@/components/tara/LevelBar';
@@ -25,7 +26,7 @@ import { abortPenalty, cancelCosts, isLate } from '@/lib/game/penalty';
 import { abortQuest } from '@/lib/quests/abortQuest';
 import { useT } from '@/lib/i18n/translate';
 import { proofHint, QUEST_ICON, questName } from '@/lib/quests/questLook';
-import { PASSAGES } from '@/lib/quests/questTypes';
+import { PASSAGES, type Passage } from '@/lib/quests/questTypes';
 import { repeatLimitLine } from '@/lib/quests/repeatLimitLine';
 import { useGameStore } from '@/lib/stores/gameStore';
 import { useQuestStore, type QuestWork } from '@/lib/stores/questStore';
@@ -75,7 +76,7 @@ export default function QuestRun() {
   const [outcome, setOutcome] = useState<CheckOutcome | null>(null);
   const [afterUri, setAfterUri] = useState<string | undefined>();
   const [isCommitted, setIsCommitted] = useState(false);
-  const [passageId, setPassageId] = useState(work.passage_id ?? PASSAGES[0]?.id ?? '');
+  const [passage, setPassage] = useState<Passage | undefined>(() => work.passage ?? PASSAGES.find((p) => p.id === work.passage_id) ?? PASSAGES[0]);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -100,7 +101,6 @@ export default function QuestRun() {
       </TaraScreen>
     );
   }
-  const passage = PASSAGES.find((p) => p.id === passageId) ?? PASSAGES[0];
   const repTarget = work.rep_target ?? 10;
 
   const start = async () => {
@@ -117,7 +117,7 @@ export default function QuestRun() {
       setPhase('preparing');
       return;
     }
-    if (quest.quest_type === 'basa') patch(questId, { passage_id: passageId });
+    if (quest.quest_type === 'basa' && passage) patch(questId, { passage, passage_id: passage.id });
     if (quest.quest_type === 'ehersisyo') patch(questId, { rep_target: repTarget });
     patch(questId, { started_at: Date.now() });
     setPhase(isVoiceQuest(quest.quest_type) ? 'proof' : 'running');
@@ -194,7 +194,8 @@ export default function QuestRun() {
   };
 
   return (
-    <TaraScreen canGoBack={phase !== 'result'}>
+    // voice proofs pin the hold button to the bottom, so the screen itself must not scroll
+    <TaraScreen canGoBack={phase !== 'result'} scroll={!(phase === 'proof' && isVoiceQuest(quest.quest_type))}>
       {phase !== 'result' ? (
         <PolyFrame cut={12} fill={PALETTE.white} stroke={PALETTE.banig300}>
           <View className="flex-row items-center gap-3 p-3.5">
@@ -231,7 +232,7 @@ export default function QuestRun() {
           {quest.quest_type === 'basa' ? (
             <>
               <TaraBubble text={t('Pick a page, then hold the button and read it aloud.', 'Pumili ng pahina, tapos pindutin at basahin nang malakas.')} />
-              <Segmented options={PASSAGES.map((p) => ({ value: p.id, label: `${p.title} (${p.lang.toUpperCase()})` }))} value={passageId} onChange={setPassageId} />
+              {passage ? <ReadingPicker passage={passage} onChange={setPassage} takePhoto={takePhoto} suggestedTopic={quest.title} /> : null}
             </>
           ) : null}
           {quest.quest_type === 'ehersisyo' ? (

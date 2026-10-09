@@ -8,7 +8,10 @@ import { COUNTING_PROMPT } from '@/lib/quests/questTypes';
 
 type CountRepsProofProps = { target: number; onCounted: (transcript: string) => void };
 
-/** Ehersisyo proof: count aloud while holding; the live line shows the runs heard so far, never a premature total. */
+/**
+ * Ehersisyo proof: count aloud while holding; the live line shows the runs heard so far, never a premature total. The
+ * hold button stays pinned at the bottom while the counts come in.
+ */
 export function CountRepsProof({ target, onCounted }: CountRepsProofProps) {
   const t = useT();
   const [liveText, setLiveText] = useState('');
@@ -17,8 +20,8 @@ export function CountRepsProof({ target, onCounted }: CountRepsProofProps) {
     .map((r) => `${r.from}-${r.to}`)
     .join(', ');
   return (
-    <View className="gap-4">
-      <View className="items-center gap-1">
+    <View className="flex-1 justify-between gap-4">
+      <View className="items-center gap-1 pt-4">
         <Text className="font-num text-5xl text-ink-900">{target}</Text>
         <Text className="font-pixel text-base text-tara-700">{t('reps to go', 'reps ang target')}</Text>
       </View>

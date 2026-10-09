@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { HoldToTalk } from '@/components/quest/HoldToTalk';
@@ -10,20 +10,26 @@ import type { CheckOutcome } from '@/types/quest';
 
 type ReadAloudProofProps = { passage: Passage; onResult: (outcome: CheckOutcome) => void };
 
-/** Basa proof: the page to read and the hold-to-talk button; scored without AI by matching the words heard. */
+/**
+ * Basa proof: the page to read and the hold-to-talk button; scored without AI by matching the words heard. The page
+ * and live transcript scroll above, and the button stays pinned at the bottom so it never moves while words come in.
+ */
 export function ReadAloudProof({ passage, onResult }: ReadAloudProofProps) {
   const t = useT();
   const [liveText, setLiveText] = useState('');
+  const scroller = useRef<ScrollView>(null);
   return (
-    <View className="gap-4">
-      <Card title={passage.title}>
-        <Text className="text-lg leading-8 text-ink-900">{passage.text}</Text>
-      </Card>
-      {liveText ? (
-        <Text className="text-sm italic text-tara-700">
-          {t('Heard', 'Narinig')}: {liveText}
-        </Text>
-      ) : null}
+    <View className="flex-1 gap-3">
+      <ScrollView ref={scroller} className="flex-1" contentContainerClassName="gap-4 pb-2" onContentSizeChange={() => liveText && scroller.current?.scrollToEnd({ animated: true })}>
+        <Card title={passage.title}>
+          <Text className="text-lg leading-8 text-ink-900">{passage.text}</Text>
+        </Card>
+        {liveText ? (
+          <Text className="text-sm italic text-tara-700">
+            {t('Heard', 'Narinig')}: {liveText}
+          </Text>
+        ) : null}
+      </ScrollView>
       <HoldToTalk
         lang={passage.lang}
         label={t('Hold and read', 'Pindutin at basahin')}
