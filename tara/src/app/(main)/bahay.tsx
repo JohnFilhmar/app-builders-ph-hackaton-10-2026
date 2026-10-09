@@ -4,12 +4,11 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Segmented } from '@/components/Segmented';
-import { AvatarStage } from '@/components/avatar/AvatarStage';
+import { HeroScene } from '@/components/avatar/HeroScene';
 import { QuestCalendar } from '@/components/home/QuestCalendar';
 import { QuestDay } from '@/components/home/QuestDay';
 import { PixelIcon, type PixelIconName } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
-import { SceneBackdrop } from '@/components/scene/SceneBackdrop';
 import { BlockBar } from '@/components/tara/LevelBar';
 import { TaraChat } from '@/components/tara/TaraChat';
 import { aiReach, useAiStore } from '@/lib/ai/aiSources';
@@ -103,9 +102,7 @@ export default function Bahay() {
           <Text className="font-pixel-bold text-2xl text-ink-900">{greeting(now.getHours(), heroName, t)}</Text>
         </View>
 
-        <View className="h-80">
-          <SceneBackdrop slot="home_backdrop" />
-          <AvatarStage className="flex-1" fx="aura" />
+        <HeroScene className="h-80">
           <View className="absolute right-4 top-3 w-36" pointerEvents="none">
             <PolyFrame cut={10} fill="rgba(255,251,242,0.94)" stroke={PALETTE.banig300}>
               <View className="items-center gap-1.5 p-3">
@@ -124,7 +121,7 @@ export default function Bahay() {
           <Text className="absolute bottom-2 left-4 font-pixel text-xs text-tara-700" pointerEvents="none">
             {t('Tap your hero', 'I-tap ang bida')}
           </Text>
-        </View>
+        </HeroScene>
 
         <View className="gap-4 px-4" onLayout={(e) => (sectionY.current = e.nativeEvent.layout.y)}>
           <PolyFrame cut={12} fill={PALETTE.white} stroke={PALETTE.banig300} strokeWidth={2.5}>

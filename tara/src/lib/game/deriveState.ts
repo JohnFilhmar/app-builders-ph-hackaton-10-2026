@@ -4,7 +4,7 @@ import { levelForXp, type LevelInfo } from '@/lib/game/levels';
 import { walkStreak, type StreakInfo } from '@/lib/game/streak';
 import { emptyTally, type DayTally } from '@/lib/game/xp';
 import { SOLD_ITEM_IDS } from '@/lib/store/items';
-import type { AchievementId, BaseAvatar, GameEvent, QuestType } from '@/types/gameEvents';
+import type { AchievementId, BaseAvatar, GameEvent, ItemSlot, QuestType } from '@/types/gameEvents';
 
 export type PabuyaItem = { id: string; title: string; price: number; claimed: boolean };
 export type OpenQuest = { quest_id: string; title: string; quest_type: QuestType; planned_minutes: number; scheduled_at?: number; declared_at: number };
@@ -23,6 +23,8 @@ export type GameState = {
   openQuests: OpenQuest[];
   /** shop items bought with Sipag */
   ownedItems: string[];
+  /** the owned item shown in each slot, or null */
+  equipped: Record<ItemSlot, string | null>;
 };
 
 const sumXp = (byDay: Map<string, number>, include: (day: string) => boolean): number =>
@@ -46,6 +48,7 @@ export function deriveState(events: GameEvent[], now: number): GameState {
   const open = new Map<string, OpenQuest>();
   const achieved = new Set<AchievementId>();
   const owned = new Set<string>();
+  const equipped: Record<ItemSlot, string | null> = { backdrop: null, frame: null, aura: null };
   let baseAvatar: BaseAvatar | null = null;
   let spent = 0;
   let linisPatunay = 0;
@@ -113,6 +116,9 @@ export function deriveState(events: GameEvent[], now: number): GameState {
           spent += e.payload.price;
         }
         break;
+      case 'item_equipped':
+        if (e.payload.item_id === null || owned.has(e.payload.item_id)) equipped[e.payload.slot] = e.payload.item_id;
+        break;
       case 'app_opened':
         break;
     }
@@ -142,5 +148,6 @@ export function deriveState(events: GameEvent[], now: number): GameState {
     baseAvatar,
     openQuests: [...open.values()],
     ownedItems: [...owned],
+    equipped,
   };
 }

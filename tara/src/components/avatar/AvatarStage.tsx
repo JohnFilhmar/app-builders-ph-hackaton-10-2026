@@ -33,6 +33,8 @@ type AvatarStageProps = {
   celebrate?: boolean;
   /** the level the player just left: its art cross-fades into the current level's art */
   evolveFrom?: number;
+  /** equipped aura item, drawn in place of the default gold aura */
+  auraItem?: string | null;
 };
 
 /** Squash, lift off by `hop` points, land with a small squash. */
@@ -47,7 +49,7 @@ function hopOnce(lift: SharedValue<number>, squash: SharedValue<number>, hop: nu
  * achievements, finished quests and level ups. Motion runs only while the screen is focused and the app is in the
  * foreground, and stays off when the system asks for reduced motion.
  */
-export function AvatarStage({ className, fx, celebrate = false, evolveFrom }: AvatarStageProps) {
+export function AvatarStage({ className, fx, celebrate = false, evolveFrom, auraItem = null }: AvatarStageProps) {
   const level = useGameStore((s) => s.state.level.level);
   const reaction = useHeroStore((s) => s.reaction);
   const nonce = useHeroStore((s) => s.nonce);
@@ -150,7 +152,7 @@ export function AvatarStage({ className, fx, celebrate = false, evolveFrom }: Av
     >
       {fx && fxSize > 0 ? (
         <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
-          <HeroFx slot={fx} size={fxSize} />
+          <HeroFx slot={fx} size={fxSize} auraItem={auraItem} />
         </View>
       ) : null}
       <Animated.View className="h-full w-full" style={[{ transformOrigin: 'bottom' }, heroStyle]}>

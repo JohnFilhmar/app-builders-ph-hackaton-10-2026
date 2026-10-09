@@ -6,7 +6,7 @@ import { PixelIcon, type PixelIconName } from '@/components/poly/PixelIcon';
 import { useT } from '@/lib/i18n/translate';
 import { PALETTE } from '@/lib/theme/palette';
 
-const TABS = ['/bahay', '/gawain', '/tindahan', '/pabuya'] as const;
+const TABS = ['/bahay', '/gawain', '/bida', '/pabuya'] as const;
 const STREAKS = [0.18, 0.34, 0.52, 0.7, 0.86];
 
 const tabIcon = (name: PixelIconName) =>
@@ -60,7 +60,7 @@ export default function MainTabs() {
       >
         <Tabs.Screen name="bahay" options={{ title: t('Home', 'Bahay'), tabBarIcon: tabIcon('home') }} />
         <Tabs.Screen name="gawain" options={{ title: t('Quests', 'Gawain'), tabBarIcon: tabIcon('scroll') }} />
-        <Tabs.Screen name="tindahan" options={{ title: t('Shop', 'Tindahan'), tabBarIcon: tabIcon('sparkle') }} />
+        <Tabs.Screen name="bida" options={{ title: t('Hero', 'Bida'), tabBarIcon: tabIcon('sword') }} />
         <Tabs.Screen name="pabuya" options={{ title: t('Rewards', 'Pabuya'), tabBarIcon: tabIcon('chest') }} />
       </Tabs>
       <View className="absolute inset-0" pointerEvents="none">

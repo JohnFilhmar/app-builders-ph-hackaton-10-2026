@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const questTypeSchema = z.enum(['linis', 'aral', 'basa', 'ehersisyo', 'sariling']);
 export const proofTierSchema = z.enum(['sabi_ko', 'nakita', 'patunay']);
 export const baseAvatarSchema = z.enum(['male', 'female']);
+/** where an equipped shop item shows: behind the hero, around the hero card, or as the hero's aura */
+export const itemSlotSchema = z.enum(['backdrop', 'frame', 'aura']);
 
 const meta = { id: z.string().min(1), at: z.number().int().nonnegative() };
 
@@ -45,6 +47,8 @@ export const gameEventSchema = z.discriminatedUnion('type', [
     payload: z.object({ quest_id: z.string(), reason: z.enum(['cancelled', 'expired']), penalty: z.number().int().nonnegative() }),
   }),
   z.object({ ...meta, type: z.literal('item_bought'), payload: z.object({ item_id: z.string(), price: z.number().int().positive() }) }),
+  /** null takes the slot's item off */
+  z.object({ ...meta, type: z.literal('item_equipped'), payload: z.object({ slot: itemSlotSchema, item_id: z.string().nullable() }) }),
   z.object({ ...meta, type: z.literal('app_opened'), payload: z.object({}) }),
 ]);
 
@@ -52,6 +56,7 @@ export type GameEvent = z.infer<typeof gameEventSchema>;
 export type QuestType = z.infer<typeof questTypeSchema>;
 export type ProofTier = z.infer<typeof proofTierSchema>;
 export type BaseAvatar = z.infer<typeof baseAvatarSchema>;
+export type ItemSlot = z.infer<typeof itemSlotSchema>;
 export type AchievementId =
   | 'unang_hakbang'
   | 'unang_patunay'

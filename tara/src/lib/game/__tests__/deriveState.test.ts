@@ -77,6 +77,18 @@ describe('deriveState', () => {
     expect(s.ownedItems).toEqual(['frame_kawayan']);
   });
 
+  it('equips only owned items and clears a slot with null', () => {
+    const events: GameEvent[] = [profile];
+    events.push(completeQuest(events, { quest_id: 'e', quest_type: 'linis', minutes: 60, tier: 'patunay', disputed: false }, NOW));
+    events.push({ id: 'q1', type: 'item_equipped', at: NOW + 1, payload: { slot: 'frame', item_id: 'frame_kawayan' } });
+    expect(deriveState(events, NOW + 2).equipped.frame).toBeNull();
+    events.push({ id: 'b1', type: 'item_bought', at: NOW + 3, payload: { item_id: 'frame_kawayan', price: 120 } });
+    events.push({ id: 'q2', type: 'item_equipped', at: NOW + 4, payload: { slot: 'frame', item_id: 'frame_kawayan' } });
+    expect(deriveState(events, NOW + 5).equipped).toEqual({ backdrop: null, frame: 'frame_kawayan', aura: null });
+    events.push({ id: 'q3', type: 'item_equipped', at: NOW + 6, payload: { slot: 'frame', item_id: null } });
+    expect(deriveState(events, NOW + 7).equipped.frame).toBeNull();
+  });
+
   it('awards Perpekto only for a perfect quiz', () => {
     const events: GameEvent[] = [profile];
     events.push(completeQuest(events, { quest_id: 'x', quest_type: 'aral', minutes: 30, tier: 'patunay', disputed: false, evidence: { quiz_correct: 4, quiz_total: 5 } }, NOW));
