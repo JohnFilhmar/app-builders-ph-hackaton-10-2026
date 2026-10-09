@@ -1,0 +1,18 @@
+# Build context is the repo root (backend/Dockerfile copies tara/src and one catalog file); keep everything else out.
+**/node_modules
+**/.expo
+.git
+.claude
+.playwright-mcp
+mobile
+docs
+tara/android
+tara/ios
+tara/assets
+ai-feasibility/android
+ai-feasibility/ios
+backend/models
+backend/data
+**/__tests__
+**/*.apk
+**/.env*

@@ -12,6 +12,8 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const CATALOG_PATH = join(ROOT, '..', 'ai-feasibility', 'src', 'lib', 'catalog', 'catalog.json');
 const TARA_CATALOG_PATH = join(ROOT, 'tara_catalog.json');
 const MODELS_DIR = join(ROOT, 'models');
+const PUBLIC_DIR = join(ROOT, 'public');
+const PUBLIC_TYPES: Record<string, string> = { '/': 'text/html; charset=utf-8', '/icon.jpg': 'image/jpeg' };
 const DATA_DIR = join(ROOT, 'data');
 const RESULTS_PATH = join(DATA_DIR, 'results.json');
 const PORT = Number(process.env.PORT ?? 8787);
@@ -88,6 +90,11 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   try {
     if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, '{"ok":true}');
+    const publicType = PUBLIC_TYPES[url.pathname];
+    if (req.method === 'GET' && publicType) {
+      res.writeHead(200, { 'content-type': publicType, 'cache-control': 'public, max-age=300' });
+      return createReadStream(join(PUBLIC_DIR, url.pathname === '/' ? 'index.html' : basename(url.pathname))).pipe(res);
+    }
     if (req.method === 'GET' && url.pathname === '/catalog') return send(res, 200, catalogWithMirror(req.headers.host ?? `localhost:${PORT}`));
     if (req.method === 'GET' && url.pathname === '/tara/catalog') return send(res, 200, taraCatalogWithMirror(req.headers.host ?? `localhost:${PORT}`));
     if (req.method === 'GET' && url.pathname === '/results') return send(res, 200, resultsHtml(), 'text/html; charset=utf-8');

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tara LEVEL UP!</title>
+<meta name="description" content="Turn chores, study, reading and exercise into quests, proven by on-device AI.">
+<link rel="icon" href="/icon.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root { --banig50:#FFFBF2; --banig100:#FDF2DC; --banig300:#E9CC92; --sipag400:#F5C542; --sipag600:#B98200; --tara700:#5C3A1A; --ink900:#21170F; --leaf500:#2E9E5B; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--banig50); color:var(--ink900); font:16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1, h2, .pixel { font-family: "Pixelify Sans", system-ui, sans-serif; }
+  .num { font-family: "Space Mono", monospace; }
+  /* chamfered corners, the app's polygon frame */
+  .poly { clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px); }
+  .hero { display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+  .hero img { width:132px; height:132px; }
+  .hero h1 { margin:0; font-size: clamp(40px, 8vw, 64px); line-height:1; letter-spacing:1px; }
+  .hero .sub { margin:6px 0 0; color:var(--sipag600); font-size:22px; }
+  .tag { margin: 18px 0 0; font-size: 19px; color: var(--tara700); max-width: 560px; }
+  .card { background: var(--banig300); padding: 2px; margin-top: 24px; }
+  .card > div { background: #fff; padding: 18px 20px; }
+  .dark > div { background: var(--ink900); color: var(--banig50); }
+  h2 { margin: 0 0 8px; font-size: 24px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+  .tier { background: var(--banig100); padding: 12px 14px; }
+  .tier b { font-family: "Pixelify Sans", sans-serif; font-size: 18px; }
+  ul { margin: 8px 0 0; padding-left: 20px; }
+  .status { display:flex; align-items:center; gap:10px; font-family:"Pixelify Sans", sans-serif; font-size:18px; }
+  .dot { width:12px; height:12px; background:#aaa; }
+  .dot.ok { background: var(--leaf500); }
+  code { font-family: "Space Mono", monospace; font-size: 14px; background: var(--banig100); padding: 1px 6px; }
+  a { color: var(--sipag600); }
+  footer { margin-top: 32px; color: var(--tara700); font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <img class="poly" src="/icon.jpg" alt="Tara LEVEL UP! app icon">
+    <div>
+      <h1>TARA</h1>
+      <p class="sub pixel">LEVEL UP!</p>
+    </div>
+  </section>
+  <p class="tag">Your day, your adventure. Turn chores, study, reading and exercise into quests. Prove them with a photo, a quiz or your voice, and Tara the tarsier checks it right on your phone. No signal needed.</p>
+
+  <div class="card poly"><div class="poly">
+    <h2>How a quest works</h2>
+    <div class="grid">
+      <div class="tier poly"><b>Sabi Ko <span class="num">1x</span></b><br>Your word. It always counts.</div>
+      <div class="tier poly"><b>Nakita <span class="num">2x</span></b><br>Tara saw some proof.</div>
+      <div class="tier poly"><b>Patunay <span class="num">3x</span></b><br>Proven: the cup is gone, the quiz is aced, the reps were counted.</div>
+    </div>
+    <ul>
+      <li>Sipag (XP) comes from fixed rules, never from the AI.</li>
+      <li>Your hero grows a new form every level, from Baguhan to Alamat.</li>
+      <li>Spend Sipag on backdrops, frames and auras, or on treats you set yourself.</li>
+    </ul>
+  </div></div>
+
+  <div class="card dark poly"><div class="poly">
+    <h2>This server</h2>
+    <p style="margin:0 0 10px">The Tara app talks to this server for its model catalog and the leaderboard. Every score is recomputed here with the same game rules the phone uses.</p>
+    <div class="status"><span id="dot" class="dot"></span><span id="state">Checking...</span></div>
+    <p id="board" style="margin:10px 0 0"></p>
+  </div></div>
+
+  <footer>Built for App Builders PH, October 2026. <a href="https://github.com/JohnFilhmar/app-builders-ph-hackaton-10-2026">Source on GitHub</a>.</footer>
+</main>
+<script>
+  fetch('/health').then(r => r.json()).then(j => {
+    document.getElementById('dot').classList.toggle('ok', !!j.ok);
+    document.getElementById('state').textContent = j.ok ? 'Online' : 'Not ready';
+  }).catch(() => { document.getElementById('state').textContent = 'Offline'; });
+  fetch('/lb?period=week').then(r => r.json()).then(b => {
+    const top = b.rows[0];
+    document.getElementById('board').textContent = b.players + (b.players === 1 ? ' player' : ' players') + ' on the leaderboard' + (top ? '. Top this week: ' + top.username + ' with ' + top.xp + ' Sipag.' : '.');
+  }).catch(() => {});
+</script>
+</body>
+</html>
