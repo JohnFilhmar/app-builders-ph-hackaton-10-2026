@@ -1,6 +1,6 @@
 # Tara: 3D to 2D hero, shop rework, leaderboard
 
-Status: draft, decisions pending (2026-10-10). Inputs: ten level PNGs (`D:\Downloads\tara-character-assets-levels-1-10`), three reference mockups, the mascot master prompt, and an llm-council review.
+Status (2026-10-10 05:30): phases 0 to 3 built and on the A54; the phase 4 tab layout is done, the ivory/anime reskin is not started. Shop items are drawn in code (components/scene), not painted art. Inputs: ten level PNGs (`D:\Downloads\tara-character-assets-levels-1-10`), three reference mockups, the mascot master prompt, and an llm-council review.
 
 ## What the inputs actually give us
 
