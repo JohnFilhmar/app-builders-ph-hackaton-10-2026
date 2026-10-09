@@ -85,10 +85,10 @@ export function createLeaderboard(path: string) {
     const known = new Set(player.events.map((e) => e.id));
     const merged = [...player.events, ...parsed.filter((e) => !known.has(e.id))];
     if (merged.length > MAX_EVENTS) return { status: 413, body: { error: 'ledger too large' } };
-    const checked = clampToRules(merged);
-    player.events = checked.events;
+    // stored as uploaded; the rules are applied when ranking, so a later rule or timezone fix applies to old uploads too
+    player.events = merged;
     save();
-    return { status: 200, body: { stored: checked.events.length, clamped: checked.clamped } };
+    return { status: 200, body: { stored: merged.length, clamped: clampToRules(merged).clamped } };
   };
 
   // the app's Reset progress: the player starts over at 0 under the same name and id
@@ -104,8 +104,9 @@ export function createLeaderboard(path: string) {
   const ranking = (period: 'week' | 'all', userId: string | undefined, now: number): Reply => {
     // ponytail: recomputes every player per request; cache per minute if the board gets busy
     const rows = Object.entries(board.players).map(([id, p]) => {
-      const state = deriveState(p.events, now);
-      const before = period === 'week' ? deriveState(p.events.filter((e) => e.at < now - WEEK_MS), now - WEEK_MS).totalXp : 0;
+      const events = clampToRules(p.events).events;
+      const state = deriveState(events, now);
+      const before = period === 'week' ? deriveState(events.filter((e) => e.at < now - WEEK_MS), now - WEEK_MS).totalXp : 0;
       return { id, username: p.username, xp: state.totalXp - before, level: state.level.level };
     });
     rows.sort((a, b) => b.xp - a.xp || a.username.localeCompare(b.username));

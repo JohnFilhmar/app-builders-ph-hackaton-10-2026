@@ -51,6 +51,10 @@ assert.equal(body.rows[0]?.xp, honest.payload.xp);
 assert.equal(body.me?.rank, 2);
 assert.ok(!JSON.stringify(board.body).includes(A), 'user ids never leave the server');
 
+assert.equal(lb.upload({ user_id: B, events: [...ledger.slice(0, 1), forged] }, NOW + 5000).status, 200);
+const forgedBoard = lb.ranking('all', B, NOW).body as { me: { xp: number } | null };
+assert.ok(forgedBoard.me && forgedBoard.me.xp < 9999, 'forged XP is lowered when ranking, not trusted');
+
 assert.equal(lb.reset({ user_id: A }).status, 200);
 const afterReset = lb.ranking('all', A, NOW).body as { rows: { username: string; xp: number }[] };
 assert.equal(afterReset.rows.find((r) => r.username === 'juan_dc')?.xp, 0, 'a reset player keeps the name at 0 XP');
