@@ -3,9 +3,16 @@ import type { ProofTier, QuestType } from '@/types/gameEvents';
 export const QUEST_TYPES: readonly QuestType[] = ['linis', 'aral', 'basa', 'ehersisyo', 'sariling'];
 
 export const LEVELS = [
-  { level: 1, name: 'Baguhan', xp: 0 },
-  { level: 2, name: 'Masigla', xp: 150 },
-  { level: 3, name: 'Masipag', xp: 400 },
+  { level: 1, name: 'Baguhan · Beginner', xp: 0 },
+  { level: 2, name: 'Masigla · Lively', xp: 150 },
+  { level: 3, name: 'Masipag · Hardworking', xp: 400 },
+  { level: 4, name: 'Matiyaga · Patient', xp: 700 },
+  { level: 5, name: 'Masikap · Diligent', xp: 1050 },
+  { level: 6, name: 'Matatag · Steadfast', xp: 1450 },
+  { level: 7, name: 'Magiting · Valiant', xp: 1900 },
+  { level: 8, name: 'Bihasa · Skilled', xp: 2400 },
+  { level: 9, name: 'Dakila · Great', xp: 2950 },
+  { level: 10, name: 'Alamat · Legend', xp: 3550 },
 ] as const;
 
 export const TIER_MULTIPLIER: Record<ProofTier, number> = { sabi_ko: 1, nakita: 2, patunay: 3 };

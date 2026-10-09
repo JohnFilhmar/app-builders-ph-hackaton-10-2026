@@ -14,7 +14,6 @@ import { useT } from '@/lib/i18n/translate';
 import { useSetupStore } from '@/lib/stores/setupStore';
 import { PALETTE } from '@/lib/theme/palette';
 import type { Lang } from '@/types/chat';
-import type { BaseAvatar } from '@/types/gameEvents';
 
 type Step = 'welcome' | 'name' | 'hero';
 
@@ -46,7 +45,7 @@ const STEPS: Step[] = ['welcome', 'name', 'hero'];
 /** First launch: language and welcome, the hero's name, then the hero. Model setup follows. */
 export default function SetupWelcome() {
   const t = useT();
-  const { language, setLanguage, heroName, setHeroName, baseAvatar, setBaseAvatar } = useSetupStore();
+  const { language, setLanguage, heroName, setHeroName } = useSetupStore();
   const [step, setStep] = useState<Step>('welcome');
   const [name, setName] = useState(heroName);
 
@@ -128,11 +127,6 @@ export default function SetupWelcome() {
             <View className="flex-1">
               <SceneBackdrop slot="onboarding_backdrop" />
               <AvatarStage className="flex-1" fx="aura" />
-            </View>
-            <View className="flex-row gap-2">
-              {(['male', 'female'] as const satisfies readonly BaseAvatar[]).map((g) => (
-                <Choice key={g} label={g === 'male' ? t('Boy', 'Lalaki') : t('Girl', 'Babae')} isPicked={baseAvatar === g} onPress={() => setBaseAvatar(g)} />
-              ))}
             </View>
             <Button label={t('Next: get Tara ready', 'Susunod: ihanda si Tara')} onPress={() => router.push('/setup/models')} />
           </>
