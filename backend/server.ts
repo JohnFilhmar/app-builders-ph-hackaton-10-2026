@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CATALOG_PATH = join(ROOT, '..', 'ai-feasibility', 'src', 'lib', 'catalog', 'catalog.json');
+const TARA_CATALOG_PATH = join(ROOT, 'tara_catalog.json');
 const MODELS_DIR = join(ROOT, 'models');
 const DATA_DIR = join(ROOT, 'data');
 const RESULTS_PATH = join(DATA_DIR, 'results.json');
@@ -40,14 +41,23 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
+type MirrorFile = { url: string; file_name: string };
+
 // Model files present in backend/models are served from this laptop instead of Hugging Face (venue Wi-Fi saver).
+function mirror(file: MirrorFile, host: string): void {
+  if (existsSync(join(MODELS_DIR, file.file_name))) file.url = `http://${host}/files/${encodeURIComponent(file.file_name)}`;
+}
+
 function catalogWithMirror(host: string): string {
-  const catalog = JSON.parse(readFileSync(CATALOG_PATH, 'utf8')) as { models: { files: { url: string; file_name: string }[] }[] };
-  for (const model of catalog.models) {
-    for (const file of model.files) {
-      if (existsSync(join(MODELS_DIR, file.file_name))) file.url = `http://${host}/files/${encodeURIComponent(file.file_name)}`;
-    }
-  }
+  const catalog = JSON.parse(readFileSync(CATALOG_PATH, 'utf8')) as { models: { files: MirrorFile[] }[] };
+  for (const model of catalog.models) model.files.forEach((f) => mirror(f, host));
+  return JSON.stringify(catalog);
+}
+
+// Tara's tiers: the only place model specifics live. The app shows tier labels, pros and cons, never model names.
+function taraCatalogWithMirror(host: string): string {
+  const catalog = JSON.parse(readFileSync(TARA_CATALOG_PATH, 'utf8')) as { capabilities: { tiers: { files: MirrorFile[] }[] }[] };
+  for (const cap of catalog.capabilities) for (const tier of cap.tiers) tier.files.forEach((f) => mirror(f, host));
   return JSON.stringify(catalog);
 }
 
@@ -74,6 +84,7 @@ const server = createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && url.pathname === '/health') return send(res, 200, '{"ok":true}');
     if (req.method === 'GET' && url.pathname === '/catalog') return send(res, 200, catalogWithMirror(req.headers.host ?? `localhost:${PORT}`));
+    if (req.method === 'GET' && url.pathname === '/tara/catalog') return send(res, 200, taraCatalogWithMirror(req.headers.host ?? `localhost:${PORT}`));
     if (req.method === 'GET' && url.pathname === '/results') return send(res, 200, resultsHtml(), 'text/html; charset=utf-8');
     if (req.method === 'GET' && url.pathname === '/results.csv') {
       const csv = [COLUMNS.join(','), ...sortedRows().map((r) => COLUMNS.map((c) => csvCell(r[c])).join(','))].join('\n');

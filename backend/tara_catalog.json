@@ -1,0 +1,187 @@
+{
+  "version": "2026-10-09.tara.2",
+  "capabilities": [
+    {
+      "id": "brain",
+      "label": "Utak ni Tara",
+      "purpose": "Gumagawa ng quiz mula sa notes mo at sumusulat ng sagot ni Tara sa Tagalog.",
+      "tiers": [
+        {
+          "id": "brain_balanse",
+          "label": "Balanse",
+          "summary": "Marunong mag-Tagalog at Ingles.",
+          "pros": [
+            "Maayos ang Tagalog",
+            "Gumagana nang offline"
+          ],
+          "cons": [
+            "Mga 800 MB",
+            "Kailangan ng phone na may 6 GB RAM o higit pa"
+          ],
+          "recommended": true,
+          "runtime": "llama",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf",
+              "file_name": "gemma-3-1b-it-Q4_K_M.gguf",
+              "size_bytes": 806058272,
+              "sha256": "8270790f3ab69fdfe860b7b64008d9a19986d8df7e407bb018184caa08798ebd"
+            }
+          ],
+          "min_ram_gb": 6
+        }
+      ]
+    },
+    {
+      "id": "eyes",
+      "label": "Mata ni Tara",
+      "purpose": "Tinitingnan ang Before at After na litrato at ang notes mo.",
+      "tiers": [
+        {
+          "id": "eyes_mabilis",
+          "label": "Mabilis",
+          "summary": "Mabilis tumingin, simpleng paglalarawan.",
+          "pros": [
+            "Mga 4 segundo bawat litrato",
+            "Maliit, mga 280 MB"
+          ],
+          "cons": [
+            "Ingles lang ang nakikita niya",
+            "Hindi gaanong detalyado"
+          ],
+          "recommended": true,
+          "runtime": "llama",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/ggml-org/SmolVLM-256M-Instruct-GGUF/resolve/main/SmolVLM-256M-Instruct-Q8_0.gguf",
+              "file_name": "SmolVLM-256M-Instruct-Q8_0.gguf",
+              "size_bytes": 175054528,
+              "sha256": "2a31195d3769c0b0fd0a4906201666108834848db768af11de1d2cef7cd35e65"
+            },
+            {
+              "role": "mmproj",
+              "url": "https://huggingface.co/ggml-org/SmolVLM-256M-Instruct-GGUF/resolve/main/mmproj-SmolVLM-256M-Instruct-Q8_0.gguf",
+              "file_name": "mmproj-SmolVLM-256M-Instruct-Q8_0.gguf",
+              "size_bytes": 103769856,
+              "sha256": "7e943f7c53f0382a6fc41b6ee0c2def63ba4fded9ab8ed039cc9e2ab905e0edd"
+            }
+          ],
+          "min_ram_gb": 4
+        },
+        {
+          "id": "eyes_malinaw",
+          "label": "Mas malinaw",
+          "summary": "Mas detalyado pero mas mabagal.",
+          "pros": [
+            "Mas maraming detalye sa litrato"
+          ],
+          "cons": [
+            "Mas mabagal",
+            "Mas malaki, mga 550 MB",
+            "Ingles lang din"
+          ],
+          "recommended": false,
+          "runtime": "llama",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/SmolVLM-500M-Instruct-Q8_0.gguf",
+              "file_name": "SmolVLM-500M-Instruct-Q8_0.gguf",
+              "size_bytes": 436806912,
+              "sha256": "9d4612de6a42214499e301494a3ecc2be0abdd9de44e663bda63f1152fad1bf4"
+            },
+            {
+              "role": "mmproj",
+              "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+              "file_name": "mmproj-SmolVLM-500M-Instruct-Q8_0.gguf",
+              "size_bytes": 108783360,
+              "sha256": "d1eb8b6b23979205fdf63703ed10f788131a3f812c7b1f72e0119d5d81295150"
+            }
+          ],
+          "min_ram_gb": 6
+        }
+      ]
+    },
+    {
+      "id": "ears",
+      "label": "Tenga ni Tara",
+      "purpose": "Nakikinig habang nagbabasa ka nang malakas o nagbibilang ng reps.",
+      "tiers": [
+        {
+          "id": "ears_mabilis",
+          "label": "Pinakamabilis",
+          "summary": "Mabilis pero madalas magkamali sa Tagalog.",
+          "pros": [
+            "Pinakamaliit, mga 32 MB",
+            "Pinakamabilis"
+          ],
+          "cons": [
+            "Madalas magkamali sa Tagalog"
+          ],
+          "recommended": false,
+          "runtime": "whisper",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny-q5_1.bin",
+              "file_name": "ggml-tiny-q5_1.bin",
+              "size_bytes": 32152673,
+              "sha256": "818710568da3ca15689e31a743197b520007872ff9576237bda97bd1b469c3d7"
+            }
+          ],
+          "min_ram_gb": 3
+        },
+        {
+          "id": "ears_balanse",
+          "label": "Balanse",
+          "summary": "Mabilis at sapat ang tama.",
+          "pros": [
+            "Mga 60 MB",
+            "Kaya ang Tagalog at Ingles"
+          ],
+          "cons": [
+            "Minsan mali sa mga pangalan ng lugar"
+          ],
+          "recommended": true,
+          "runtime": "whisper",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base-q5_1.bin",
+              "file_name": "ggml-base-q5_1.bin",
+              "size_bytes": 59707625,
+              "sha256": "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898"
+            }
+          ],
+          "min_ram_gb": 3
+        },
+        {
+          "id": "ears_tumpak",
+          "label": "Mas tumpak",
+          "summary": "Mas tama sa Tagalog pero mas mabagal.",
+          "pros": [
+            "Mas tama sa Tagalog at Taglish"
+          ],
+          "cons": [
+            "Mas mabagal",
+            "Mga 190 MB"
+          ],
+          "recommended": false,
+          "runtime": "whisper",
+          "files": [
+            {
+              "role": "model",
+              "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin",
+              "file_name": "ggml-small-q5_1.bin",
+              "size_bytes": 190085487,
+              "sha256": "ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb"
+            }
+          ],
+          "min_ram_gb": 4
+        }
+      ]
+    }
+  ]
+}
