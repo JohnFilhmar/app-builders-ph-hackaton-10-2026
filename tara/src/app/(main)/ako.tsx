@@ -8,6 +8,7 @@ import { Segmented } from '@/components/Segmented';
 import { PixelIcon } from '@/components/poly/PixelIcon';
 import { PolyFrame } from '@/components/poly/PolyFrame';
 import { BlockBar } from '@/components/tara/LevelBar';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { SipagBalance } from '@/components/rewards/SipagBalance';
 import { TaraBubble } from '@/components/tara/TaraBubble';
 import { TaraScreen } from '@/components/tara/TaraScreen';
@@ -33,8 +34,8 @@ const achievements = (t: Translate): { id: AchievementId; name: string; how: str
   { id: 'walang_signal', name: 'Walang Signal', how: t('Proven in airplane mode', 'Patunay habang naka-airplane mode'), isHidden: true },
 ];
 
-/** Real rewards bought with Sipag, the badges earned, and settings. */
-export default function Pabuya() {
+/** The Profile tab: who the player is and their stats, then treats bought with Sipag, badges earned, and settings. */
+export default function Ako() {
   const t = useT();
   const state = useGameStore((s) => s.state);
   const append = useGameStore((s) => s.append);
@@ -66,7 +67,11 @@ export default function Pabuya() {
     ]);
 
   return (
-    <TaraScreen title={t('Rewards', 'Pabuya')} subtitle={t('Spend Sipag on treats you set yourself.', 'Gastusin ang Sipag sa sariling premyo.')}>
+    <TaraScreen title={t('Profile', 'Ako')}>
+      <ProfileHeader />
+
+      <Text className="pt-2 font-pixel-bold text-xl text-ink-900">{t('Rewards', 'Pabuya')}</Text>
+      <Text className="text-sm text-tara-700">{t('Spend Sipag on treats you set yourself.', 'Gastusin ang Sipag sa sariling premyo.')}</Text>
       <SipagBalance />
 
       <Text className="pt-2 font-pixel-bold text-xl text-ink-900">{t('Your own treats', 'Sariling premyo')}</Text>

@@ -1,10 +1,12 @@
 // Feasibility backend: serves the model catalog, mirrors model files over the LAN, and collects benchmark results.
-// Zero dependencies. Run: node --experimental-strip-types server.ts
+// Zero dependencies. Run: npm start (strip-types plus app_paths.mjs, so the leaderboard can reuse the app's game rules)
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { createLeaderboard, type Reply } from './leaderboard.ts';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CATALOG_PATH = join(ROOT, '..', 'ai-feasibility', 'src', 'lib', 'catalog', 'catalog.json');
@@ -13,11 +15,14 @@ const MODELS_DIR = join(ROOT, 'models');
 const DATA_DIR = join(ROOT, 'data');
 const RESULTS_PATH = join(DATA_DIR, 'results.json');
 const PORT = Number(process.env.PORT ?? 8787);
+const LEADERBOARD_PATH = join(DATA_DIR, 'leaderboard.json');
 
 type ResultRow = Record<string, unknown> & { id: string; created_at?: string };
 
 mkdirSync(DATA_DIR, { recursive: true });
 mkdirSync(MODELS_DIR, { recursive: true });
+const leaderboard = createLeaderboard(LEADERBOARD_PATH);
+const reply = (res: ServerResponse, r: Reply) => send(res, r.status, JSON.stringify(r.body));
 const results = new Map<string, ResultRow>(
   existsSync(RESULTS_PATH) ? (JSON.parse(readFileSync(RESULTS_PATH, 'utf8')) as ResultRow[]).map((r) => [r.id, r]) : [],
 );
@@ -25,7 +30,7 @@ const results = new Map<string, ResultRow>(
 const COLUMNS = ['created_at', 'device_model', 'device_ram_gb', 'task', 'model_id', 'target', 'lang', 'load_ms', 'latency_ms', 'tokens_per_s', 'realtime_factor', 'score', 'input', 'output', 'error'];
 
 function send(res: ServerResponse, status: number, body: string, type = 'application/json'): void {
-  res.writeHead(status, { 'content-type': type, 'access-control-allow-origin': '*' });
+  res.writeHead(status, { 'content-type': type, 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type, x-user-id' });
   res.end(body);
 }
 
@@ -96,6 +101,12 @@ const server = createServer(async (req, res) => {
       results.set(row.id, row);
       writeFileSync(RESULTS_PATH, JSON.stringify([...results.values()], null, 2));
       return send(res, 200, '{"ok":true}');
+    }
+    if (req.method === 'POST' && url.pathname === '/lb/register') return reply(res, leaderboard.register(JSON.parse(await readBody(req))));
+    if (req.method === 'POST' && url.pathname === '/lb/events') return reply(res, leaderboard.upload(JSON.parse(await readBody(req)), Date.now()));
+    if (req.method === 'GET' && url.pathname === '/lb') {
+      const userId = req.headers['x-user-id'];
+      return reply(res, leaderboard.ranking(url.searchParams.get('period') === 'all' ? 'all' : 'week', typeof userId === 'string' ? userId : undefined, Date.now()));
     }
     if (req.method === 'GET' && url.pathname.startsWith('/files/')) {
       const path = join(MODELS_DIR, basename(decodeURIComponent(url.pathname.slice('/files/'.length))));

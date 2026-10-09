@@ -20,8 +20,9 @@
     },
     "android": {
       "package": "ph.appbuilders.tara",
+      "allowBackup": false,
       "adaptiveIcon": {
-        "backgroundColor": "#FFF4D6",
+        "backgroundColor": "#1D1612",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
