@@ -57,14 +57,14 @@ export default function Ranggo() {
       setIsBusy(true);
       setProblem(null);
       try {
-        await syncLedger(backendUrl, useGameStore.getState().events);
+        await syncLedger(backendUrl, useGameStore.getState().events, username);
         setBoard(await fetchBoard(backendUrl, which));
       } catch (err) {
         setProblem(errorMessage(err));
       }
       setIsBusy(false);
     },
-    [backendUrl],
+    [backendUrl, username],
   );
 
   useFocusEffect(

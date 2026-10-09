@@ -78,7 +78,15 @@ If a laptop or the cloud fails or sends an empty answer, the job falls back to t
 
 On Windows, run `npm install` in `tara/` from PowerShell, not Git Bash. llama.rn's postinstall step needs Windows' `tar`.
 
-### 1. Start the backend
+### 1. The backend
+
+The app talks to the hosted backend at https://tara.filhmar.online by default (landing page, model catalog, leaderboard). To host it yourself with Docker, from the repo root:
+
+```bash
+docker compose -f backend/docker-compose.prod.yml up -d --build
+```
+
+It binds `127.0.0.1:8787`; put nginx in front with `docs/nginx/tara.filhmar.online.conf` and run `certbot --nginx`. To run it on a laptop instead:
 
 ```bash
 cd backend
@@ -87,7 +95,7 @@ npm start
 
 It listens on port 8787. The app's setup screen downloads models from the catalog this server serves. Model files placed in `backend/models/` are served from the laptop instead of Hugging Face, which saves venue Wi-Fi.
 
-Over USB, point the phone at the laptop:
+Over USB, point the phone at a laptop backend, then type `http://localhost:8787` as the backend address on the setup screen:
 
 ```bash
 adb reverse tcp:8787 tcp:8787

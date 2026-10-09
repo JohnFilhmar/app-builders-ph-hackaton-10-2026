@@ -30,12 +30,16 @@ type SetupStore = {
   finishSetup: () => void;
 };
 
+/** The hosted team server (backend/ in Docker behind nginx). A laptop can still be typed in on the setup screen. */
+export const DEFAULT_BACKEND_URL = 'https://tara.filhmar.online';
+// the old default: the dev laptop over USB (adb reverse)
+const OLD_DEFAULT_BACKEND_URL = 'http://localhost:8787';
+
 /** First-launch setup: where models come from, which tier per capability, and whether setup finished. */
 export const useSetupStore = create<SetupStore>()(
   persist(
     (set) => ({
-      // the dev laptop over USB (adb reverse); change on the setup screen for Wi-Fi
-      backendUrl: 'http://localhost:8787',
+      backendUrl: DEFAULT_BACKEND_URL,
       catalog: null,
       chosenTiers: {},
       isSetupDone: false,
@@ -66,6 +70,14 @@ export const useSetupStore = create<SetupStore>()(
     {
       name: 'tara-setup',
       storage: createJSONStorage(() => AsyncStorage),
+      // v1: installs still on the old localhost default move to the hosted server; a custom address is kept
+      version: 1,
+      migrate: (persisted, version) => {
+        if (version < 1 && persisted && typeof persisted === 'object' && 'backendUrl' in persisted && persisted.backendUrl === OLD_DEFAULT_BACKEND_URL) {
+          return { ...persisted, backendUrl: DEFAULT_BACKEND_URL };
+        }
+        return persisted;
+      },
       partialize: (s) => ({ backendUrl: s.backendUrl, catalog: s.catalog, chosenTiers: s.chosenTiers, isSetupDone: s.isSetupDone, baseAvatar: s.baseAvatar, isNanayMode: s.isNanayMode, language: s.language, hasChosenLanguage: s.hasChosenLanguage, heroName: s.heroName }),
       onRehydrateStorage: () => () => useSetupStore.setState({ hasHydrated: true }),
     },

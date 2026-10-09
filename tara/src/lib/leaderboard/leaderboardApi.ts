@@ -29,8 +29,10 @@ export async function joinBoard(baseUrl: string, username: string): Promise<stri
 /**
  * Sends the whole ledger in chunks; the server skips events it already has and recomputes XP with the game rules.
  * Nothing is queued separately: the ledger is the queue, so a failed sync just sends everything again next time.
+ * Joins again first (the server answers the same name for the same id), so moving to a new server keeps the player.
  */
-export async function syncLedger(baseUrl: string, events: GameEvent[]): Promise<void> {
+export async function syncLedger(baseUrl: string, events: GameEvent[], username: string): Promise<void> {
+  await joinBoard(baseUrl, username);
   const user_id = await getUserId();
   for (let i = 0; i < events.length; i += CHUNK) {
     if (i > 0) await new Promise((r) => setTimeout(r, 1600)); // the server allows one upload per 1.5 s
