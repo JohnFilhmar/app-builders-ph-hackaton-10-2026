@@ -2,7 +2,7 @@
 
 Tara LEVEL UP! is an Android app that turns everyday chores, study, reading and exercise into quests. You say what you are about to do, you do it, and you prove it. Tara, a tarsier who never scolds, checks the proof with AI that runs on the phone itself and pays you in Sipag, the app's XP. Sipag levels up a chibi hero through ten forms, buys cosmetics in the shop, and puts you on a leaderboard.
 
-It was built for the App Builders PH hackathon (October 2026, "Local AI" theme) by team BOOM TARA TARA G, and runs fully offline on a mid-range phone. The test device was a Samsung Galaxy A54. The team server is live at https://tara.filhmar.online.
+It was built for the App Builders PH hackathon (October 2026, "Local AI" theme) by team BOOM TARA TARA G, and runs fully offline on a mid-range phone. The test device was a Samsung Galaxy A54. The team server is live at https://tara.filhmar.online, where you can also download the Android APK.
 
 ## The problem
 
@@ -103,7 +103,12 @@ The app talks to the hosted backend at https://tara.filhmar.online by default (l
 docker compose -f backend/docker-compose.prod.yml up -d --build
 ```
 
-It binds `127.0.0.1:8787`; put nginx in front with `docs/nginx/tara.filhmar.online.conf` and run `certbot --nginx`. To run it on a laptop instead:
+It binds `127.0.0.1:8787`; put nginx in front with `docs/nginx/tara.filhmar.online.conf` and run `certbot --nginx`. The landing page's download button serves the APK from `/var/www/tara/download/` on the host:
+
+```bash
+scp tara/android/app/build/outputs/apk/release/app-release.apk server:/var/www/tara/download/tara-level-up.apk
+ssh server 'cd /var/www/tara/download && sha256sum tara-level-up.apk > tara-level-up.apk.sha256'
+``` To run it on a laptop instead:
 
 ```bash
 cd backend
